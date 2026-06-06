@@ -110,12 +110,12 @@ By providing real-time donor matching and verification, the system aims to:
 * Google Maps API
 * Leaflet.js
 
-### Backend (Planned)
+### Backend 
 
 * Node.js
 * Express.js
 
-### Database (Planned)
+### Database 
 
 * MongoDB
 
