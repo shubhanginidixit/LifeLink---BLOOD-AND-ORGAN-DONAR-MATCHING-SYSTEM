@@ -145,34 +145,6 @@ By providing real-time donor matching and verification, the system aims to:
 
 ---
 
-## Installation
-
-### Clone Repository
-
-```bash
-git clone https://github.com/shubhanginidixit/BLOOD-AND-ORGAN-DONAR-MATCHING-SYSTEM.git
-```
-
-### Navigate to Project Directory
-
-```bash
-cd BLOOD-AND-ORGAN-DONAR-MATCHING-SYSTEM
-```
-
-### Install Dependencies
-
-```bash
-npm install
-```
-
-### Run Development Server
-
-```bash
-npm run dev
-```
-
----
-
 ## Team Members
 
 | Name              |
