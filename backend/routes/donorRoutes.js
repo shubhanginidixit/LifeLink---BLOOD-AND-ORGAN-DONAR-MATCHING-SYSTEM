@@ -1,42 +1,23 @@
 const express = require("express");
-
-const Donor = require("../models/Donor");
+const { protect, role } = require("../middleware/authMiddleware");
+const {
+  registerDonor,
+  getDonors,
+  getDonorsByBloodGroup,
+  getMyProfile,
+  updateDonor
+} = require("../controllers/donorController");
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
-  try {
-    const donor = await Donor.create(req.body);
+router.route("/")
+  .post(protect, role("donor"), registerDonor)
+  .get(protect, getDonors);
 
-    res.status(201).json(donor);
+router.route("/me")
+  .get(protect, role("donor"), getMyProfile)
+  .put(protect, role("donor"), updateDonor);
 
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
-
-router.get("/", async (req, res) => {
-  try {
-    const donors = await Donor.find();
-
-    res.json(donors);
-
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
-
-router.get("/blood/:group", async (req, res) => {
-  try {
-    const donors = await Donor.find({
-      bloodGroup: req.params.group
-    });
-
-    res.json(donors);
-
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
+router.get("/blood/:group", protect, getDonorsByBloodGroup);
 
 module.exports = router;

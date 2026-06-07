@@ -14,7 +14,16 @@ const requestSchema = new mongoose.Schema(
 
     units: Number,
 
-    hospital: String,
+    hospital: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "Hospital",
+    },
+
+    matchedDonor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Donor",
+    },
 
     city: String,
 
@@ -27,6 +36,17 @@ const requestSchema = new mongoose.Schema(
       ],
       default: "Pending",
     },
+
+    isEmergency: {
+      type: Boolean,
+      default: false
+    },
+
+    urgencyLevel: {
+      type: String,
+      enum: ["low", "medium", "high", "critical"],
+      default: "medium"
+    }
   },
   { timestamps: true }
 );

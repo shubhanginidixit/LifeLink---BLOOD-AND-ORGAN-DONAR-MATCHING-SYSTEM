@@ -1,26 +1,18 @@
 const express = require("express");
-const Hospital = require("../models/Hospital");
+const { protect, role } = require("../middleware/authMiddleware");
+const {
+  registerHospital,
+  getHospitals,
+  getMyHospital
+} = require("../controllers/hospitalController");
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
-  try {
-    const hospital = await Hospital.create(req.body);
+router.route("/")
+  .post(protect, role("hospital"), registerHospital)
+  .get(protect, getHospitals);
 
-    res.status(201).json(hospital);
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
-
-router.get("/", async (req, res) => {
-  try {
-    const hospitals = await Hospital.find();
-
-    res.json(hospitals);
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
+router.route("/me")
+  .get(protect, role("hospital"), getMyHospital);
 
 module.exports = router;
