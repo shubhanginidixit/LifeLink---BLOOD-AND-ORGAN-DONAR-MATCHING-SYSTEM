@@ -22,6 +22,6 @@ const userSchema = new mongoose.Schema({
     enum: ["donor", "hospital", "admin"],
     default: "donor"
   }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);
