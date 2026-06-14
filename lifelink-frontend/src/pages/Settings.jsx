@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
@@ -24,6 +24,82 @@ export default function Settings() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
+
+  const [dragActive, setDragActive] = useState(false);
+  const eligibilityRef = useRef(null);
+
+  // Sync states if backend verification completes in the background
+  useEffect(() => {
+    setName(profile.name || '');
+    setBloodGroup(profile.bloodGroup || '');
+    setDonateBlood(profile.donateBlood || false);
+    setDonateOrgan(profile.donateOrgan || false);
+    setSelectedOrgans(profile.organs || []);
+  }, [
+    profile.name,
+    profile.bloodGroup,
+    profile.donateBlood,
+    profile.donateOrgan,
+    profile.organs
+  ]);
+
+  // Smooth scroll to eligibility section if hashtag exists in URL
+  useEffect(() => {
+    if (window.location.hash === '#eligibility' && eligibilityRef.current) {
+      setTimeout(() => {
+        eligibilityRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 400);
+    }
+  }, []);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  const processFile = (file) => {
+    const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
+      alert('Invalid format. Please upload a PDF, PNG, JPG, or JPEG file.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File is too large. Please upload a file smaller than 2MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateProfile({
+        eligibilityFile: reader.result,
+        eligibilityFileName: file.name,
+        eligibilityFileType: file.type,
+        eligibilityStatus: 'processing'
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const openCertificate = () => {
+    const fileDataUrl = profile.eligibilityFile;
+    if (!fileDataUrl) return;
+    try {
+      const parts = fileDataUrl.split(';base64,');
+      const contentType = parts[0].split(':')[1];
+      const raw = window.atob(parts[1]);
+      const rawLength = raw.length;
+      const uInt8Array = new Uint8Array(rawLength);
+      for (let i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+      }
+      const blob = new Blob([uInt8Array], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (e) {
+      window.open(fileDataUrl, '_blank');
+    }
+  };
 
   const handleDeleteAccount = (e) => {
     e.preventDefault();
@@ -83,6 +159,131 @@ export default function Settings() {
           </div>
         </div>
 
+        <div className="settings-section" ref={eligibilityRef} id="eligibility">
+          <h3>Donor Eligibility Verification</h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+            LIFELINK requires a doctor's certification to list you as an active blood or organ donor.
+          </p>
+
+          {/* Render state card based on profile.eligibilityStatus */}
+          {(!profile.eligibilityStatus || profile.eligibilityStatus === 'none') && (
+            <div className="eligibility-status-box" style={{ padding: '20px', borderRadius: 'var(--radius-sm)', background: 'rgba(15, 23, 42, 0.03)', border: '1px solid rgba(15, 23, 42, 0.08)', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-muted)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <div style={{ textAlign: 'left' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 700 }}>No Certificate Uploaded</h4>
+                  <p style={{ fontSize: '0.775rem', marginTop: '2px' }}>Please upload a certification to activate donor features.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {profile.eligibilityStatus === 'processing' && (
+            <div className="eligibility-status-box" style={{ padding: '20px', borderRadius: 'var(--radius-sm)', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.3)', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#d97706' }}>
+                <svg className="spinner-rotate" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ animation: 'spin 1.5s linear infinite', flexShrink: 0 }}>
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 700 }}>Verification in Progress</h4>
+                  <p style={{ fontSize: '0.775rem', marginTop: '2px', color: '#b45309' }}>Our team is reviewing your certificate: <strong>{profile.eligibilityFileName}</strong>. You can navigate and use the site normally.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {profile.eligibilityStatus === 'verified' && (
+            <div className="eligibility-status-box" style={{ padding: '20px', borderRadius: 'var(--radius-sm)', background: 'rgba(13, 148, 136, 0.08)', border: '1px solid rgba(13, 148, 136, 0.3)', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--green-dark)' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--green-dark)' }}>Verified - You can be a donor</h4>
+                  <p style={{ fontSize: '0.775rem', marginTop: '2px', color: 'var(--green-dark)' }}>Your certificate is active: <strong>{profile.eligibilityFileName}</strong>. You are now live as a donor on the platform!</p>
+                </div>
+                <button type="button" className="btn btn-glass btn-sm" onClick={openCertificate} style={{ background: 'white', flexShrink: 0 }}>
+                  Open File
+                </button>
+              </div>
+            </div>
+          )}
+
+          {profile.eligibilityStatus === 'failed' && (
+            <div className="eligibility-status-box" style={{ padding: '20px', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.3)', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#dc2626' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                <div style={{ flex: 1, textAlign: 'left' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#dc2626' }}>Failed to Verify</h4>
+                  <p style={{ fontSize: '0.775rem', marginTop: '2px', color: '#b91c1c' }}>Verification failed for certificate: <strong>{profile.eligibilityFileName}</strong>. Please retry with a valid document.</p>
+                </div>
+                {profile.eligibilityFile && (
+                  <button type="button" className="btn btn-glass btn-sm" onClick={openCertificate} style={{ background: 'white', color: '#dc2626', flexShrink: 0 }}>
+                    Open File
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* File Upload Zone for None, Failed, or Re-upload */}
+          {profile.eligibilityStatus !== 'processing' && (
+            <div style={{ marginTop: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span className="form-label" style={{ margin: 0 }}>
+                  {profile.eligibilityStatus === 'verified' ? 'Update Certificate' : 'Upload Doctor Certification'}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>PDF, PNG, JPG or JPEG (Max 2MB)</span>
+              </div>
+              
+              <div 
+                className={`upload-zone glass ${dragActive ? 'upload-zone-active' : ''}`}
+                onDragEnter={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
+                onDrop={(e) => { e.preventDefault(); setDragActive(false); if (e.dataTransfer.files && e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); }}
+                style={{
+                  border: '2px dashed rgba(15, 23, 42, 0.08)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '24px',
+                  textAlign: 'center',
+                  background: 'rgba(255, 255, 255, 0.4)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition)'
+                }}
+              >
+                <input
+                  type="file"
+                  id="settings-cert-file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+                <label htmlFor="settings-cert-file" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ color: 'var(--text-light)', marginBottom: '4px' }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: '0.85rem' }}><strong>Choose certificate file</strong> to upload</span>
+                  <span style={{ fontSize: '0.725rem', color: 'var(--text-light)' }}>Tip: To test failure, name the file 'fail.png'</span>
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
+
         <form className="settings-section" onSubmit={handleSaveProfile}>
           <h3>Profile Details</h3>
           <div className="form-group">
@@ -100,27 +301,37 @@ export default function Settings() {
           </div>
           
           <p className="profile-section-title" style={{ marginTop: 24, fontSize: '0.75rem' }}>Donation Availability</p>
-          <div className="toggle-row">
+          <div className="toggle-row" style={{ opacity: profile.eligibilityStatus !== 'verified' ? 0.6 : 1 }}>
             <div className="toggle-row-info">
-              <h4>Donate Blood</h4>
+              <h4>Donate Blood {profile.eligibilityStatus !== 'verified' && <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 'normal', marginLeft: '6px' }}>(Requires verified certificate)</span>}</h4>
               <p>Available for emergency blood donation near you</p>
             </div>
-            <label className="toggle">
-              <input type="checkbox" checked={donateBlood} onChange={(e) => setDonateBlood(e.target.checked)} />
+            <label className="toggle" style={{ cursor: profile.eligibilityStatus !== 'verified' ? 'not-allowed' : 'pointer' }}>
+              <input 
+                type="checkbox" 
+                checked={donateBlood} 
+                onChange={(e) => setDonateBlood(e.target.checked)} 
+                disabled={profile.eligibilityStatus !== 'verified'}
+              />
               <span className="toggle-slider" />
             </label>
           </div>
-          <div className="toggle-row">
+          <div className="toggle-row" style={{ opacity: profile.eligibilityStatus !== 'verified' ? 0.6 : 1 }}>
             <div className="toggle-row-info">
-              <h4>Donate Organ</h4>
+              <h4>Donate Organ {profile.eligibilityStatus !== 'verified' && <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 'normal', marginLeft: '6px' }}>(Requires verified certificate)</span>}</h4>
               <p>Available for emergency organ donation</p>
             </div>
-            <label className="toggle">
-              <input type="checkbox" checked={donateOrgan} onChange={(e) => setDonateOrgan(e.target.checked)} />
+            <label className="toggle" style={{ cursor: profile.eligibilityStatus !== 'verified' ? 'not-allowed' : 'pointer' }}>
+              <input 
+                type="checkbox" 
+                checked={donateOrgan} 
+                onChange={(e) => setDonateOrgan(e.target.checked)} 
+                disabled={profile.eligibilityStatus !== 'verified'}
+              />
               <span className="toggle-slider" />
             </label>
           </div>
-          {donateOrgan && (
+          {donateOrgan && profile.eligibilityStatus === 'verified' && (
             <div style={{ marginTop: 16 }}>
               <label className="form-label" style={{ marginBottom: 10, display: 'block' }}>Organs willing to donate</label>
               <div className="filter-chips">

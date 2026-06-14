@@ -1,14 +1,23 @@
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { useAuth } from '../context/AuthContext';
 import { formatDate, formatTime } from '../utils/helpers';
 
 export default function Notifications() {
+  const navigate = useNavigate();
   const {
     notifications,
     markNotificationRead,
     markAllNotificationsRead,
     clearNotifications,
   } = useAuth();
+
+  const handleNotifClick = (notif) => {
+    markNotificationRead(notif.id);
+    if (notif.redirect) {
+      navigate(notif.redirect);
+    }
+  };
 
   return (
     <>
@@ -39,10 +48,10 @@ export default function Notifications() {
               <div
                 key={notif.id}
                 className={`notif-item ${!notif.read ? 'notif-item-unread' : ''}`}
-                onClick={() => markNotificationRead(notif.id)}
+                onClick={() => handleNotifClick(notif)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && markNotificationRead(notif.id)}
+                onKeyDown={(e) => e.key === 'Enter' && handleNotifClick(notif)}
               >
                 {!notif.read && <div className="notif-dot" />}
                 <div className="notif-content" style={{ flex: 1 }}>

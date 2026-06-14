@@ -121,3 +121,24 @@
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-light);
 }
+
+.upload-zone {
+  transition: var(--transition);
+}
+
+.upload-zone:hover {
+  border-color: rgba(225, 29, 72, 0.3) !important;
+  background: rgba(225, 29, 72, 0.02) !important;
+}
+
+.upload-zone-active {
+  border-color: var(--green) !important;
+  background: rgba(13, 148, 136, 0.04) !important;
+}
+
+.btn-remove-file {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+

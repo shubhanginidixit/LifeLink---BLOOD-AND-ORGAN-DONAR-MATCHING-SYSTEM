@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -26,6 +26,7 @@ export function AuthProvider({ children }) {
   const [callLogs, setCallLogs] = useState(() => loadJSON(CALLS_KEY, []));
   const [notifications, setNotifications] = useState(() => loadJSON(NOTIFS_KEY, []));
   const [blockedIds, setBlockedIds] = useState(() => loadJSON(BLOCKED_KEY, []));
+  const timerRef = useRef(null);
 
   useEffect(() => {
     if (user) saveJSON(STORAGE_KEY, user);
@@ -43,6 +44,66 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     saveJSON(BLOCKED_KEY, blockedIds);
   }, [blockedIds]);
+
+  useEffect(() => {
+    const hasProcessing = user?.profile?.eligibilityStatus === 'processing';
+    if (hasProcessing && !timerRef.current) {
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null;
+        const users = loadJSON(USERS_KEY, []);
+        const currentUser = loadJSON(STORAGE_KEY, null);
+        if (!currentUser) return;
+        const idx = users.findIndex((u) => u.id === currentUser.id);
+        if (idx !== -1) {
+          const fileName = currentUser.profile?.eligibilityFileName || '';
+          const isSuccess = !/fail|invalid/i.test(fileName);
+          const nextStatus = isSuccess ? 'verified' : 'failed';
+          
+          const updatedProfile = {
+            ...users[idx].profile,
+            eligibilityStatus: nextStatus,
+          };
+          
+          // If failed, automatically turn off donor switches
+          if (!isSuccess) {
+            updatedProfile.donateBlood = false;
+            updatedProfile.donateOrgan = false;
+          }
+          
+          users[idx].profile = updatedProfile;
+          
+          saveJSON(USERS_KEY, users);
+          setUser({ ...users[idx] });
+          
+          // Generate notification
+          const notif = {
+            id: `n_${Date.now()}`,
+            read: false,
+            timestamp: new Date().toISOString(),
+            title: isSuccess ? 'Eligibility Verified' : 'Verification Failed',
+            message: isSuccess 
+              ? 'Your medical eligibility certificate has been verified. You can now toggle donor availability.'
+              : 'Medical certificate verification failed. Click here to re-upload.',
+            type: isSuccess ? 'success' : 'error',
+            redirect: '/dashboard/settings#eligibility'
+          };
+          
+          setNotifications((prev) => {
+            const updated = [notif, ...prev];
+            saveJSON(NOTIFS_KEY, updated);
+            return updated;
+          });
+        }
+      }, 7000);
+    }
+    
+    return () => {
+      if (!hasProcessing && timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [user?.profile?.eligibilityStatus, user?.profile?.eligibilityFileName, user?.id, notifications]);
 
   const getUsers = () => loadJSON(USERS_KEY, []);
 
