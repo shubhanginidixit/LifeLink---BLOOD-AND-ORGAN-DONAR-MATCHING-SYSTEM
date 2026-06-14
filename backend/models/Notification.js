@@ -17,13 +17,21 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["match", "emergency", "info"],
+      enum: ["match", "emergency", "info", "success", "error"],
       default: "info",
+    },
+    redirect: {
+      type: String,
+      default: "",
     },
     read: {
       type: Boolean,
       default: false,
     },
+    timestamp: {
+      type: Date,
+      default: Date.now,
+    }
   },
   { timestamps: true }
 );
