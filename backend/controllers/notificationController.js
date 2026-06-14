@@ -7,7 +7,7 @@ const Notification = require("../models/Notification");
 const getNotifications = asyncHandler(async (req, res) => {
   const notifications = await Notification.find({ user: req.user._id })
     .sort({ createdAt: -1 })
-    .limit(20);
+    .limit(50);
   res.json(notifications);
 });
 
@@ -29,7 +29,28 @@ const markAsRead = asyncHandler(async (req, res) => {
   res.json(notification);
 });
 
+// @desc    Mark all notifications as read
+// @route   POST /api/notifications/read-all
+// @access  Private
+const markAllAsRead = asyncHandler(async (req, res) => {
+  await Notification.updateMany(
+    { user: req.user._id, read: false },
+    { read: true }
+  );
+  res.json({ success: true });
+});
+
+// @desc    Clear all notifications
+// @route   DELETE /api/notifications
+// @access  Private
+const clearNotifications = asyncHandler(async (req, res) => {
+  await Notification.deleteMany({ user: req.user._id });
+  res.json({ success: true });
+});
+
 module.exports = {
   getNotifications,
-  markAsRead
+  markAsRead,
+  markAllAsRead,
+  clearNotifications
 };

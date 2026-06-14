@@ -1,9 +1,10 @@
 const express = require("express");
-const { protect } = require("../middleware/authMiddleware");
-const { searchNearbyDonors } = require("../controllers/searchController");
+const { optionalProtect, protect } = require("../middleware/authMiddleware");
+const { searchDonors, getDonorById } = require("../controllers/searchController");
 
 const router = express.Router();
 
-router.get("/nearby", protect, searchNearbyDonors);
+router.get("/", optionalProtect, searchDonors);
+router.get("/:id", protect, getDonorById);
 
 module.exports = router;
