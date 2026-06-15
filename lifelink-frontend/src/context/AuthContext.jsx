@@ -1,3 +1,10 @@
+/**
+ * @file AuthContext.jsx
+ * @description Context provider module managing frontend login state, authentication session, and active user profile updates.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext(null);
