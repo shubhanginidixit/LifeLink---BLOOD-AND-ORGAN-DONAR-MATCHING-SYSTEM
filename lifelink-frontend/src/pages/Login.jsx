@@ -17,10 +17,10 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const result = login({ identifier, password });
+    const result = await login({ identifier, password });
     if (!result.success) {
       setError(result.error);
       return;

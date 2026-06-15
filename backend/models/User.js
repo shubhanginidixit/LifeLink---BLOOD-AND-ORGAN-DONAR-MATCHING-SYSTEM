@@ -1,10 +1,3 @@
-/**
- * @file User.js
- * @description Schema definition, password hashing middleware, and model setup for users.
- * @author KrishBansod99
- * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
- */
-
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({

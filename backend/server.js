@@ -1,10 +1,3 @@
-/**
- * @file server.js
- * @description Main entry point file to configure and run the backend Express application.
- * @author KrishBansod99
- * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
- */
-
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
