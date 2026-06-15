@@ -110,7 +110,7 @@ export default function CompleteProfile() {
       return;
     }
 
-    await completeProfile({
+    const result = await completeProfile({
       name: name.trim(),
       dob,
       age,
@@ -132,6 +132,10 @@ export default function CompleteProfile() {
       city: location.city,
       pincode: location.pincode,
     });
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
     navigate('/dashboard');
   };
 
