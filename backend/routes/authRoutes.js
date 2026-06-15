@@ -1,3 +1,10 @@
+/**
+ * @file authRoutes.js
+ * @description Router mapping for user authentication and authorization endpoints.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 const express = require("express");
 const { protect } = require("../middleware/authMiddleware");
 const {
