@@ -28,7 +28,7 @@ const registerDonor = asyncHandler(async (req, res) => {
 // @route   GET /api/donors
 // @access  Private
 const getDonors = asyncHandler(async (req, res) => {
-  const donors = await Donor.find().populate("user", "fullName email");
+  const donors = await Donor.find().populate("user", "email");
   res.json(donors);
 });
 
@@ -38,7 +38,7 @@ const getDonors = asyncHandler(async (req, res) => {
 const getDonorsByBloodGroup = asyncHandler(async (req, res) => {
   const donors = await Donor.find({
     bloodGroup: req.params.group
-  }).populate("user", "fullName email");
+  }).populate("user", "email");
   res.json(donors);
 });
 
@@ -46,7 +46,7 @@ const getDonorsByBloodGroup = asyncHandler(async (req, res) => {
 // @route   GET /api/donors/me
 // @access  Private (Donor only)
 const getMyProfile = asyncHandler(async (req, res) => {
-  const donor = await Donor.findOne({ user: req.user._id }).populate("user", "fullName email");
+  const donor = await Donor.findOne({ user: req.user._id }).populate("user", "email");
   if (!donor) {
     res.status(404);
     throw new Error("Donor profile not found");
