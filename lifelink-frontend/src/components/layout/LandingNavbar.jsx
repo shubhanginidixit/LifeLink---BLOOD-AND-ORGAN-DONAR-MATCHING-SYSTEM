@@ -37,14 +37,8 @@ export default function LandingNavbar() {
         </div>
 
         <div className="landing-nav-auth">
-          {isAuthenticated ? (
-            <Link to="/dashboard" className="btn btn-primary btn-sm">Go to Dashboard</Link>
-          ) : (
-            <>
-              <Link to="/login" className="btn btn-outline btn-sm">Login</Link>
-              <Link to="/signup" className="btn btn-primary btn-sm">Register</Link>
-            </>
-          )}
+          <Link to="/login" className="btn btn-outline btn-sm">Login</Link>
+          <Link to="/signup" className="btn btn-primary btn-sm">Register</Link>
         </div>
       </div>
     </nav>

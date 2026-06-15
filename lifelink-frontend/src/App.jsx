@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LocationProvider } from './context/LocationContext';
@@ -22,9 +23,14 @@ function ProtectedRoute({ children, requireProfile = true }) {
 }
 
 function PublicOnlyRoute({ children }) {
-  const { isAuthenticated, profileComplete } = useAuth();
-  if (isAuthenticated && profileComplete) return <Navigate to="/dashboard" replace />;
-  if (isAuthenticated && !profileComplete) return <Navigate to="/complete-profile" replace />;
+  const { isAuthenticated, logout } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      logout();
+    }
+  }, [isAuthenticated, logout]);
+
   return children;
 }
 
