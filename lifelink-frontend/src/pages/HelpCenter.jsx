@@ -1,5 +1,3 @@
-import DashboardLayout from '../components/layout/DashboardLayout';
-
 export default function HelpCenter() {
   const faqs = [
     {

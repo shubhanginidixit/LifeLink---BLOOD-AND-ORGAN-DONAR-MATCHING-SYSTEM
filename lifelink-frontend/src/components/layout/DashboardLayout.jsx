@@ -8,7 +8,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import '../../context/LocationContext';
 import { useLocation as useAppLocation } from '../../context/LocationContext';
 import './DashboardLayout.css';
 

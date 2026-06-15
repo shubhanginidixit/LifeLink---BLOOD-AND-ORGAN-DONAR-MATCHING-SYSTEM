@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import DashboardLayout from '../components/layout/DashboardLayout';
 import ContactModal from '../components/ui/ContactModal';
 import { useAuth } from '../context/AuthContext';
 import { formatDate, formatTime } from '../utils/helpers';
@@ -10,24 +9,17 @@ export default function CallLogs() {
   const [showContact, setShowContact] = useState(false);
   const [contactType, setContactType] = useState('blood');
 
-  const handleContactAgain = async (call) => {
-    try {
-      const token = localStorage.getItem('lifelink_token');
-      if (!token) return;
-      const res = await fetch(`/api/search/${call.donorId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (res.ok) {
-        const donor = await res.json();
-        setContactDonor(donor);
-        setContactType(call.type);
-        setShowContact(true);
-      }
-    } catch (err) {
-      console.error('Failed to fetch donor details for re-contact:', err);
-    }
+  const handleContactAgain = (call) => {
+    const donor = {
+      id: call.donorId,
+      bloodGroup: call.bloodGroup,
+      age: call.age,
+      gender: call.gender,
+      city: call.city,
+    };
+    setContactDonor(donor);
+    setContactType(call.type);
+    setShowContact(true);
   };
 
   return (

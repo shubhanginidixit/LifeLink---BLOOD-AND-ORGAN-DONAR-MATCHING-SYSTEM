@@ -43,7 +43,7 @@ const createRequest = asyncHandler(async (req, res) => {
     matchCriteria.organType = organType;
   }
 
-  const matchedDonor = await Donor.findOne(matchCriteria).populate("user", "email fullName");
+  const matchedDonor = await Donor.findOne(matchCriteria).populate("user", "email");
 
   if (matchedDonor) {
     request.status = "Matched";
@@ -65,12 +65,12 @@ const createRequest = asyncHandler(async (req, res) => {
         await sendEmail({
           email: matchedDonor.user.email,
           subject: "Urgent: You've been matched for a donation!",
-          message: `Hello ${matchedDonor.user.fullName},\n\nYou have been matched with ${hospitalProfile.hospitalName} for a ${requestType} donation.\n\nPlease contact them immediately at ${hospitalProfile.phone || hospitalProfile.email} to coordinate.`
+          message: `Hello,\n\nYou have been matched with ${hospitalProfile.hospitalName} for a ${requestType} donation.\n\nPlease contact them immediately at ${hospitalProfile.phone || hospitalProfile.email} to coordinate.`
         });
       }
     }
   } else if (isEmergency) {
-    const emergencyDonors = await Donor.find({ city: request.city, available: true }).populate("user", "email fullName");
+    const emergencyDonors = await Donor.find({ city: request.city, available: true }).populate("user", "email");
     
     for (const d of emergencyDonors) {
       if (d.user) {

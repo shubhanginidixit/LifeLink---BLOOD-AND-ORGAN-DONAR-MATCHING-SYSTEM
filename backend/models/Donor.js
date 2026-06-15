@@ -12,7 +12,8 @@ const donorSchema = new mongoose.Schema({
 
   donorType: {
     type: String,
-    enum: ["blood", "organ"]
+    enum: ["blood", "organ"],
+    required: true
   },
 
   organType: String,
