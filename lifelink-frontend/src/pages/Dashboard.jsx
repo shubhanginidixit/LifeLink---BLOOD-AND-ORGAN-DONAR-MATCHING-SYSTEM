@@ -1,3 +1,10 @@
+/**
+ * @file Dashboard.jsx
+ * @description Main dashboard landing page showing donor statistics, recent activities, and search entries.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import DashboardLayout from '../components/layout/DashboardLayout';
