@@ -1,3 +1,10 @@
+/**
+ * @file Modal.jsx
+ * @description Re-usable UI overlay modal component with backdrop blur styling.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 import { useEffect } from 'react';
 
 export default function Modal({ isOpen, onClose, title, children }) {
