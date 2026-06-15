@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import DashboardLayout from '../components/layout/DashboardLayout';
 import DonorCard from '../components/ui/DonorCard';
 import ContactModal from '../components/ui/ContactModal';
 import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
 import { BLOOD_GROUPS, ORGANS } from '../utils/helpers';
+import api from '../api/axios';
 
 export default function SearchPage() {
   const { type } = useParams();
@@ -19,25 +19,35 @@ export default function SearchPage() {
   const isBlood = type === 'blood';
   const chips = isBlood ? BLOOD_GROUPS : ORGANS;
 
+  const abortRef = useRef(null);
+
   useEffect(() => {
     runSearch('');
-  }, [type, location]);
+  }, [type, location, blockedIds]);
 
   const runSearch = async (q) => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
-      const token = localStorage.getItem('lifelink_token');
-      if (!token) return;
-      const res = await fetch(`/api/search?type=${type}&query=${encodeURIComponent(q)}&lat=${location.lat}&lng=${location.lng}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const { data } = await api.get('/search/donors', {
+        params: {
+          type,
+          query: q,
+          lat: location.lat,
+          lng: location.lng
+        },
+        signal: controller.signal
       });
-      if (res.ok) {
-        const data = await res.json();
-        setResults(data.filter((d) => !blockedIds.includes(d.id || d._id)));
-      }
+      const res = data.filter((d) => !blockedIds.includes(d.id));
+      setResults(res);
     } catch (err) {
-      console.error('Search failed:', err);
+      if (err.name !== 'CanceledError' && err.name !== 'AbortError') {
+        console.error('Error fetching donors:', err);
+        setResults([]);
+      }
     }
   };
 

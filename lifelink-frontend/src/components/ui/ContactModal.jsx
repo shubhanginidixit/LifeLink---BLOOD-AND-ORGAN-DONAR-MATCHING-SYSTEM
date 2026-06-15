@@ -111,6 +111,11 @@ export default function ContactModal({ isOpen, onClose, donor, type }) {
         city: donor.city,
         status: 'connected',
       });
+      addNotification({
+        title: 'Masked Call Connected',
+        message: `Your secure call with a ${donor.bloodGroup} donor (${donor.age}y, ${donor.gender}) was connected via masked number.`,
+        type: 'call',
+      });
       setCalling(false);
       setStep('done');
     }, 2000);

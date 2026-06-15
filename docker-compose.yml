@@ -38,6 +38,7 @@ services:
       - "5173:5173"
     environment:
       - NODE_ENV=development
+      - VITE_API_TARGET=http://backend:5000
     depends_on:
       - backend
     volumes:
