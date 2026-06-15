@@ -1,3 +1,10 @@
+/**
+ * @file DashboardLayout.jsx
+ * @description Core dashboard layout wrapping top navigation bar, responsive sidebar, and workspace canvas.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 import { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
