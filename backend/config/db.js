@@ -1,3 +1,10 @@
+/**
+ * @file db.js
+ * @description Database connection setup and configuration for MongoDB using Mongoose.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
