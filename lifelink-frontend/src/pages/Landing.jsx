@@ -34,7 +34,7 @@ export default function Landing() {
         setPincodeVal('');
       }
     } catch {
-      setLocationGranted(true);
+      setLocationGranted(false);
     }
   };
 
