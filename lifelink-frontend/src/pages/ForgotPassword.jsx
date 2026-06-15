@@ -43,7 +43,7 @@ export default function ForgotPassword() {
     setError('');
   };
 
-  const handleReset = (e) => {
+  const handleReset = async (e) => {
     e.preventDefault();
     if (newPassword.length < 6) {
       setError('Password must be at least 6 characters');
@@ -53,7 +53,7 @@ export default function ForgotPassword() {
       setError('Passwords do not match');
       return;
     }
-    const result = resetPassword({ identifier, newPassword });
+    const result = await resetPassword({ identifier, newPassword });
     if (!result.success) {
       setError(result.error);
       return;
