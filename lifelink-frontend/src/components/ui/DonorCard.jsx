@@ -1,3 +1,10 @@
+/**
+ * @file DonorCard.jsx
+ * @description Re-usable UI card element rendering individual donor profiles, compatibility details, and distances.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 import { formatDistance } from '../../utils/helpers';
 
 export default function DonorCard({ donor, type, onContact }) {
