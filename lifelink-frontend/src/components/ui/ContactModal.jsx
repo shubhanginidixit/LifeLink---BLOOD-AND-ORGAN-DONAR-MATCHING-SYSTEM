@@ -1,3 +1,10 @@
+/**
+ * @file ContactModal.jsx
+ * @description Re-usable UI overlay contact details popup modal supporting secure masked calls.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { generateOTP, validatePhone } from '../../utils/helpers';
