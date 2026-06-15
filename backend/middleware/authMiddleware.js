@@ -1,10 +1,3 @@
-/**
- * @file authMiddleware.js
- * @description Authentication and authorization middleware logic.
- * @author KrishBansod99
- * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
- */
-
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
 const User = require("../models/User");

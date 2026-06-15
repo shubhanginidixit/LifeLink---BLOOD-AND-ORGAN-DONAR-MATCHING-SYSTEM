@@ -1,10 +1,3 @@
-/**
- * @file CallLog.js
- * @description Schema definition and model setup for call history entries.
- * @author KrishBansod99
- * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
- */
-
 const mongoose = require("mongoose");
 
 const callLogSchema = new mongoose.Schema({

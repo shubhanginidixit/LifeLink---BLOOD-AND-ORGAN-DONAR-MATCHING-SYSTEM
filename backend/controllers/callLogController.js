@@ -1,10 +1,3 @@
-/**
- * @file callLogController.js
- * @description Controller layer for getting, adding, and deleting call history logs.
- * @author KrishBansod99
- * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
- */
-
 const asyncHandler = require("express-async-handler");
 const CallLog = require("../models/CallLog");
 

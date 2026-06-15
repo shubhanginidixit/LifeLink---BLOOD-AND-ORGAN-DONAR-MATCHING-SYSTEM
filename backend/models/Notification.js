@@ -1,10 +1,3 @@
-/**
- * @file Notification.js
- * @description Schema definition and model setup for system notifications.
- * @author KrishBansod99
- * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
- */
-
 const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema(

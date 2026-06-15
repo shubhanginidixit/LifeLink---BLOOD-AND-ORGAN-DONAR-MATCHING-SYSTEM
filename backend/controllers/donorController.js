@@ -1,10 +1,3 @@
-/**
- * @file donorController.js
- * @description Controller layer for searching and listing available blood and organ donors.
- * @author KrishBansod99
- * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
- */
-
 const asyncHandler = require("express-async-handler");
 const Donor = require("../models/Donor");
 
