@@ -1,3 +1,10 @@
+/**
+ * @file ForgotPassword.jsx
+ * @description Forgot Password page allowing verification code check and credential recovery.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
