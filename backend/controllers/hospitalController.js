@@ -21,7 +21,7 @@ const registerHospital = asyncHandler(async (req, res) => {
 // @route   GET /api/hospitals
 // @access  Private
 const getHospitals = asyncHandler(async (req, res) => {
-  const hospitals = await Hospital.find().populate("user", "fullName email");
+  const hospitals = await Hospital.find().populate("user", "email");
   res.json(hospitals);
 });
 
@@ -29,7 +29,7 @@ const getHospitals = asyncHandler(async (req, res) => {
 // @route   GET /api/hospitals/me
 // @access  Private (Hospital only)
 const getMyHospital = asyncHandler(async (req, res) => {
-  const hospital = await Hospital.findOne({ user: req.user._id }).populate("user", "fullName email");
+  const hospital = await Hospital.findOne({ user: req.user._id }).populate("user", "email");
   if (!hospital) {
     res.status(404);
     throw new Error("Hospital profile not found");
