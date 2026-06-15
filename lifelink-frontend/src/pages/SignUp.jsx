@@ -1,3 +1,10 @@
+/**
+ * @file SignUp.jsx
+ * @description Sign Up form page managing new user registration and validation.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
