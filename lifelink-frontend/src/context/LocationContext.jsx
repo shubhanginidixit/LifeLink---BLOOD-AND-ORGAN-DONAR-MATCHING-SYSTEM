@@ -1,3 +1,10 @@
+/**
+ * @file LocationContext.jsx
+ * @description Context provider module managing location services, coordinates, and pincodes.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 import { createContext, useContext, useState, useCallback } from 'react';
 import { getCoordsFromPincode } from '../utils/helpers';
 
