@@ -1,3 +1,10 @@
+/**
+ * @file authController.js
+ * @description Controller layer for managing user registration, login, profile updates, and authentication.
+ * @author KrishBansod99
+ * @reviewed Reviewed and documented by KrishBansod99 for code maintainability.
+ */
+
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 const Joi = require("joi");
