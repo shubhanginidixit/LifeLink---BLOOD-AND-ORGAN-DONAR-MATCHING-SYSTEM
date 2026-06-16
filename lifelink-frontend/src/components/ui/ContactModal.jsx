@@ -6,11 +6,13 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { generateOTP, validatePhone } from '../../utils/helpers';
 import Modal from './Modal';
 
 export default function ContactModal({ isOpen, onClose, donor, type }) {
+  const navigate = useNavigate();
   const { user, addCallLog, addNotification, blockedIds } = useAuth();
   const [step, setStep] = useState(user ? 'confirm' : 'phone');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -144,8 +146,14 @@ export default function ContactModal({ isOpen, onClose, donor, type }) {
             <button className="btn btn-glass" style={{ flex: 1 }} onClick={handleClose}>
               Cancel
             </button>
+            <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => {
+              handleClose();
+              navigate(`/dashboard/chat/${donorId}`);
+            }}>
+              Send Message
+            </button>
             <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleConnect}>
-              Yes, Contact
+              Call Now
             </button>
           </div>
         </div>
