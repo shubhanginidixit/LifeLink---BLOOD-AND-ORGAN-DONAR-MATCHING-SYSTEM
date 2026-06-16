@@ -8,7 +8,8 @@ const {
   updateProfile,
   deleteAccount,
   blockDonor,
-  unblockDonor
+  unblockDonor,
+  saveFCMToken
 } = require("../controllers/authController");
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.put("/profile", protect, updateProfile);
 router.post("/delete", protect, deleteAccount);
 router.post("/block/:donorId", protect, blockDonor);
 router.post("/unblock/:donorId", protect, unblockDonor);
+router.post("/fcm-token", protect, saveFCMToken);
 
 module.exports = router;
