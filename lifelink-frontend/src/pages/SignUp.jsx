@@ -46,7 +46,7 @@ export default function SignUp() {
       setError(result.error);
       return;
     }
-    navigate('/complete-profile');
+    navigate('/dashboard');
   };
 
   return (

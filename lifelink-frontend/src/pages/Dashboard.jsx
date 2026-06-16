@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { BLOOD_GROUPS, ORGANS } from '../utils/helpers';
 import Modal from '../components/ui/Modal';
 import api from '../api/axios';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, callLogs, notifications } = useAuth();
+  const { user, callLogs, notifications, addNotification } = useAuth();
+  const { socket } = useSocket();
   const [stats, setStats] = useState({ totalDonors: 0, activeRequests: 0, successfulMatches: 0, registeredHospitals: 0 });
+  const [myRequests, setMyRequests] = useState([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestType, setRequestType] = useState('blood');
   const [bloodGroup, setBloodGroup] = useState('');
@@ -24,7 +27,17 @@ export default function Dashboard() {
     api.get('/dashboard/stats')
       .then(({ data }) => setStats(data))
       .catch(() => {});
+    api.get('/requests/mine')
+      .then(({ data }) => setMyRequests(data))
+      .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (notif) => addNotification(notif);
+    socket.on('new-notification', handler);
+    return () => socket.off('new-notification', handler);
+  }, [socket, addNotification]);
 
   const handleCreateRequest = async (e) => {
     e.preventDefault();
@@ -52,6 +65,7 @@ export default function Dashboard() {
       setBloodGroup('');
       setOrganType('');
       setIsEmergency(false);
+      api.get('/requests/mine').then(({ data }) => setMyRequests(data)).catch(() => {});
       setTimeout(() => {
         setShowRequestModal(false);
         setRequestSuccess(false);
@@ -216,6 +230,54 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {myRequests.length > 0 && (
+          <div className="my-requests" style={{ marginTop: 20 }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14 }}>My Requests</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {myRequests.map((req) => (
+                <div key={req._id} className="glass" style={{
+                  padding: '14px 18px',
+                  borderRadius: 'var(--radius-sm)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{
+                      display: 'inline-block',
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      background: req.status === 'Matched' ? '#10b981' : req.status === 'Fulfilled' ? '#3b82f6' : req.isEmergency ? '#ef4444' : '#f59e0b',
+                      flexShrink: 0,
+                    }} />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                        {req.requestType === 'blood' ? req.bloodGroup : req.organType} {req.requestType === 'blood' ? 'Blood' : 'Organ'} Request
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {req.city} &middot; {new Date(req.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    padding: '4px 10px',
+                    borderRadius: 20,
+                    background: req.status === 'Matched' ? 'rgba(16, 185, 129, 0.1)' : req.status === 'Fulfilled' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                    color: req.status === 'Matched' ? '#059669' : req.status === 'Fulfilled' ? '#2563eb' : '#d97706',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {req.status}{req.isEmergency ? ' · Emergency' : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <Modal isOpen={showRequestModal} onClose={() => setShowRequestModal(false)} title="Create Donation Request">

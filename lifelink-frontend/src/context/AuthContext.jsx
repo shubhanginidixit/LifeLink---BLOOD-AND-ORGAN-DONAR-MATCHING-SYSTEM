@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../api/axios';
+import { requestFCMPermission, onForegroundMessage } from '../firebase';
 
 const AuthContext = createContext(null);
 
@@ -53,6 +54,37 @@ export function AuthProvider({ children }) {
     };
     fetchAll();
   }, [token]);
+
+  // ── FCM: Initialize on login ───────────────────────
+  useEffect(() => {
+    if (!user || !token) return;
+
+    const saveToken = async (fcmToken) => {
+      try {
+        await api.post('/auth/fcm-token', { token: fcmToken });
+      } catch (err) {
+        console.warn('Failed to save FCM token:', err);
+      }
+    };
+
+    requestFCMPermission(saveToken);
+
+    const unsubscribe = onForegroundMessage((payload) => {
+      const { title, body } = payload.notification || {};
+      if (title) {
+        addNotification({
+          title,
+          message: body || '',
+          type: 'info',
+          redirect: payload.data?.redirect || '/dashboard',
+        });
+      }
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [user, token]);
 
   // ── Auth: Sign Up ──────────────────────────────────
   const signUp = useCallback(async ({ email, phone, password }) => {
