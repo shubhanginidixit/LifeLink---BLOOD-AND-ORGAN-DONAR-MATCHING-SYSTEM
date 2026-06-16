@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LocationProvider } from './context/LocationContext';
+import { SocketProvider } from './context/SocketContext';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
@@ -13,25 +14,26 @@ import CallLogs from './pages/CallLogs';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
 import HelpCenter from './pages/HelpCenter';
+import Chat from './pages/Chat';
 import DashboardLayout from './components/layout/DashboardLayout';
 
-function ProtectedRoute({ children, requireProfile = true }) {
-  const { isAuthenticated, profileComplete } = useAuth();
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return null;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (requireProfile && !profileComplete) return <Navigate to="/complete-profile" replace />;
   return children;
 }
 
 function PublicOnlyRoute({ children }) {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, loading, logout } = useAuth();
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!loading && isAuthenticated) {
       logout();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loading, isAuthenticated]);
 
+  if (loading) return null;
   return children;
 }
 
@@ -45,7 +47,7 @@ function AppRoutes() {
       <Route
         path="/complete-profile"
         element={
-          <ProtectedRoute requireProfile={false}>
+          <ProtectedRoute>
             <CompleteProfile />
           </ProtectedRoute>
         }
@@ -64,6 +66,8 @@ function AppRoutes() {
         <Route path="notifications" element={<Notifications />} />
         <Route path="settings" element={<Settings />} />
         <Route path="help" element={<HelpCenter />} />
+        <Route path="chat" element={<Chat />} />
+        <Route path="chat/:userId" element={<Chat />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
@@ -74,9 +78,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <LocationProvider>
-          <AppRoutes />
-        </LocationProvider>
+        <SocketProvider>
+          <LocationProvider>
+            <AppRoutes />
+          </LocationProvider>
+        </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
   );
