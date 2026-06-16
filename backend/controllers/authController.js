@@ -299,6 +299,20 @@ const unblockDonor = asyncHandler(async (req, res) => {
   res.json({ success: true, blockedIds: user.blockedIds });
 });
 
+// @desc    Save FCM token for push notifications
+// @route   POST /api/auth/fcm-token
+// @access  Private
+const saveFCMToken = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+  if (!token) {
+    res.status(400);
+    throw new Error("Token is required");
+  }
+
+  await User.findByIdAndUpdate(req.user._id, { fcmToken: token });
+  res.json({ success: true });
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -307,5 +321,6 @@ module.exports = {
   updateProfile,
   deleteAccount,
   blockDonor,
-  unblockDonor
+  unblockDonor,
+  saveFCMToken
 };
