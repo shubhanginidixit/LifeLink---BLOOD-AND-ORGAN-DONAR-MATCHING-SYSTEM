@@ -1,13 +1,26 @@
+import { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { formatDate, formatTime } from '../utils/helpers';
 
 export default function Notifications() {
   const {
     notifications,
+    addNotification,
     markNotificationRead,
     markAllNotificationsRead,
     clearNotifications,
   } = useAuth();
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (notif) => {
+      addNotification(notif);
+    };
+    socket.on('new-notification', handler);
+    return () => socket.off('new-notification', handler);
+  }, [socket, addNotification]);
 
   return (
     <>
