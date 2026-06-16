@@ -3,6 +3,7 @@ const { protect, role } = require("../middleware/authMiddleware");
 const {
   createRequest,
   createDonorRequest,
+  getMyRequests,
   getRequests,
   updateRequest
 } = require("../controllers/requestController");
@@ -13,6 +14,7 @@ router.route("/")
   .post(protect, role("hospital"), createRequest)
   .get(protect, getRequests);
 
+router.get("/mine", protect, getMyRequests);
 router.post("/donor", protect, createDonorRequest);
 
 router.route("/:id")

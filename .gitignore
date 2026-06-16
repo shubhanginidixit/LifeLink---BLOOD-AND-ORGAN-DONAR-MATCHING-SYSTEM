@@ -8,6 +8,9 @@ node_modules/
 .env.test.local
 .env.production.local
 
+# Firebase service account
+backend/serviceAccountKey.json
+
 # Build output
 dist/
 build/

@@ -1,9 +1,12 @@
 const express = require("express");
+const http = require("http");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { errorHandler } = require("./middleware/errorMiddleware");
+const { initSocket } = require("./socket");
+const { initFirebase } = require("./utils/push");
 
 dotenv.config();
 
@@ -19,8 +22,8 @@ app.use(helmet());
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
 });
 app.use("/api", limiter);
 
@@ -38,12 +41,18 @@ app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/search", require("./routes/searchRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/calls", require("./routes/callLogRoutes"));
+app.use("/api/chat", require("./routes/chatRoutes"));
 
 app.use(errorHandler);
 
+const server = http.createServer(app);
+
+initSocket(server);
+initFirebase();
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
