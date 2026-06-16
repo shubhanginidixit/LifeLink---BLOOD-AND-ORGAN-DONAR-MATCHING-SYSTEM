@@ -62,6 +62,11 @@ const userSchema = new mongoose.Schema({
   blockedIds: {
     type: [String],
     default: []
+  },
+
+  fcmToken: {
+    type: String,
+    default: ""
   }
 }, { timestamps: true });
 
