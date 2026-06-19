@@ -50,7 +50,7 @@ function initSocket(server) {
               sender: userId,
               receiver: data.receiverId,
               text: data.text,
-              timestamp: msg.timestamp,
+              createdAt: msg.createdAt,
               read: false,
               senderName: populated.sender?.profile?.name || "User",
             });
@@ -62,7 +62,7 @@ function initSocket(server) {
           sender: userId,
           receiver: data.receiverId,
           text: data.text,
-          timestamp: msg.timestamp,
+          createdAt: msg.createdAt,
           read: false,
         });
       } catch (err) {
