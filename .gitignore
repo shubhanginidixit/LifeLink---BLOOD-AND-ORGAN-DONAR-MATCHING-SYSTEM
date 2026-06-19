@@ -7,6 +7,7 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+backend/.env
 
 # Firebase service account
 backend/serviceAccountKey.json

@@ -12,6 +12,7 @@ export default function Dashboard() {
   const { socket } = useSocket();
   const [stats, setStats] = useState({ totalDonors: 0, activeRequests: 0, successfulMatches: 0, registeredHospitals: 0 });
   const [myRequests, setMyRequests] = useState([]);
+  const [communityRequests, setCommunityRequests] = useState([]);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestType, setRequestType] = useState('blood');
   const [bloodGroup, setBloodGroup] = useState('');
@@ -30,6 +31,9 @@ export default function Dashboard() {
     api.get('/requests/mine')
       .then(({ data }) => setMyRequests(data))
       .catch(() => {});
+    api.get('/requests')
+      .then(({ data }) => setCommunityRequests(data))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -38,6 +42,18 @@ export default function Dashboard() {
     socket.on('new-notification', handler);
     return () => socket.off('new-notification', handler);
   }, [socket, addNotification]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (newReq) => {
+      setCommunityRequests((prev) => {
+        if (prev.some((r) => r._id === newReq._id)) return prev;
+        return [newReq, ...prev];
+      });
+    };
+    socket.on('new-request', handler);
+    return () => socket.off('new-request', handler);
+  }, [socket]);
 
   const handleCreateRequest = async (e) => {
     e.preventDefault();
@@ -278,6 +294,63 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        <div className="community-requests" style={{ marginTop: 20 }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 14 }}>Community Requests</h3>
+          {communityRequests.length === 0 ? (
+            <div className="glass" style={{ padding: '20px', textAlign: 'center', borderRadius: 'var(--radius-sm)' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No active requests yet. Be the first to post one!</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {communityRequests.map((req) => {
+                const posterName = req.requestedBy?.name || 'Someone';
+                const isSelf = req.requestedBy?._id === user?._id;
+                return (
+                  <div key={req._id} className="glass" style={{
+                    padding: '14px 18px',
+                    borderRadius: 'var(--radius-sm)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{
+                        display: 'inline-block',
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        background: req.status === 'Matched' ? '#10b981' : req.status === 'Fulfilled' ? '#3b82f6' : req.isEmergency ? '#ef4444' : '#f59e0b',
+                        flexShrink: 0,
+                      }} />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                          {req.requestType === 'blood' ? req.bloodGroup : req.organType} {req.requestType === 'blood' ? 'Blood' : 'Organ'} Request
+                          {isSelf && <span style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginLeft: 6 }}>(you)</span>}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {posterName} &middot; {req.city} &middot; {new Date(req.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      padding: '4px 10px',
+                      borderRadius: 20,
+                      background: req.status === 'Matched' ? 'rgba(16, 185, 129, 0.1)' : req.status === 'Fulfilled' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                      color: req.status === 'Matched' ? '#059669' : req.status === 'Fulfilled' ? '#2563eb' : '#d97706',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {req.status}{req.isEmergency ? ' · Emergency' : ''}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
       <Modal isOpen={showRequestModal} onClose={() => setShowRequestModal(false)} title="Create Donation Request">

@@ -1,10 +1,13 @@
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 const Joi = require("joi");
+const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const CallLog = require("../models/CallLog");
 const generateToken = require("../utils/generateToken");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const registerSchema = Joi.object({
   email: Joi.string().email().required(),
@@ -169,6 +172,11 @@ const resetPassword = asyncHandler(async (req, res) => {
     throw new Error("Account not found");
   }
 
+  if (!user.password) {
+    res.status(400);
+    throw new Error("This account uses Google Sign-In. Password reset is not available.");
+  }
+
   user.password = await bcrypt.hash(newPassword, 10);
   await user.save();
 
@@ -238,10 +246,6 @@ const updateProfile = asyncHandler(async (req, res) => {
 // @access  Private
 const deleteAccount = asyncHandler(async (req, res) => {
   const { password } = req.body;
-  if (!password) {
-    res.status(400);
-    throw new Error("Password is required");
-  }
 
   const user = await User.findById(req.user._id);
   if (!user) {
@@ -249,13 +253,18 @@ const deleteAccount = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
-  const isMatched = await bcrypt.compare(password, user.password);
-  if (!isMatched) {
-    res.status(400);
-    throw new Error("Incorrect password");
+  if (user.password) {
+    if (!password) {
+      res.status(400);
+      throw new Error("Password is required");
+    }
+    const isMatched = await bcrypt.compare(password, user.password);
+    if (!isMatched) {
+      res.status(400);
+      throw new Error("Incorrect password");
+    }
   }
 
-  // Delete Call Logs and Notifications of this user
   await CallLog.deleteMany({ user: user._id });
   await Notification.deleteMany({ user: user._id });
   await User.findByIdAndDelete(user._id);
@@ -313,6 +322,68 @@ const saveFCMToken = asyncHandler(async (req, res) => {
   res.json({ success: true });
 });
 
+// @desc    Login/Register with Google
+// @route   POST /api/auth/google
+// @access  Public
+const googleAuth = asyncHandler(async (req, res) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    res.status(400);
+    throw new Error("Google credential is required");
+  }
+
+  let ticket;
+  try {
+    ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+  } catch (err) {
+    res.status(401);
+    throw new Error("Invalid Google credential");
+  }
+
+  const payload = ticket.getPayload();
+  const { sub: googleId, email, name, picture } = payload;
+
+  let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+  if (user) {
+    if (!user.googleId) {
+      user.googleId = googleId;
+    }
+    if (picture && !user.avatar) {
+      user.avatar = picture;
+    }
+    await user.save();
+  } else {
+    user = await User.create({
+      email,
+      googleId,
+      avatar: picture || "",
+      role: "donor",
+      profile: {
+        name: name || "",
+      },
+    });
+  }
+
+  res.json({
+    success: true,
+    user: {
+      _id: user._id,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      profileComplete: user.profileComplete,
+      profile: user.profile,
+      blockedIds: user.blockedIds,
+    },
+    token: generateToken(user._id),
+  });
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -322,5 +393,6 @@ module.exports = {
   deleteAccount,
   blockDonor,
   unblockDonor,
-  saveFCMToken
+  saveFCMToken,
+  googleAuth,
 };

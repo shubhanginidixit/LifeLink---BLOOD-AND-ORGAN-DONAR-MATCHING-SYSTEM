@@ -19,8 +19,10 @@ services:
       - "5000:5000"
     environment:
       - PORT=5000
-      - MONGO_URI=mongodb://mongodb:27017/lifelink
+      - MONGO_URI=mongodb+srv://dhanushpillay28_db_user:IEEE_internship2026@cluster0.wzrjrza.mongodb.net/lifelink?retryWrites=true&w=majority
       - JWT_SECRET=supersecretjwtkey_change_this_in_production
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5000,https://blood-and-organ-donar-matching-syst.vercel.app
+      - GOOGLE_CLIENT_ID=532800323819-grvpjhup1nh39d2doeq0ahnk61v51ip5.apps.googleusercontent.com
       - NODE_ENV=development
     depends_on:
       - mongodb
@@ -46,6 +48,8 @@ services:
       - VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID:-}
       - VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID:-}
       - VITE_FIREBASE_VAPID_KEY=${VITE_FIREBASE_VAPID_KEY:-}
+      - VITE_GOOGLE_CLIENT_ID=532800323819-grvpjhup1nh39d2doeq0ahnk61v51ip5.apps.googleusercontent.com
+      - VITE_API_URL=http://localhost:5000
     depends_on:
       - backend
     volumes:

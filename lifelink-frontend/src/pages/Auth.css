@@ -142,3 +142,29 @@
   background: none;
 }
 
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 24px 0 20px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.auth-divider span {
+  font-size: 0.8rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.google-btn-wrapper {
+  display: flex;
+  justify-content: center;
+}
+

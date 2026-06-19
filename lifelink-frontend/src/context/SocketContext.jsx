@@ -20,7 +20,7 @@ export function SocketProvider({ children }) {
       return;
     }
 
-    const s = io(import.meta.env.VITE_API_URL || window.location.origin, {
+    const s = io(import.meta.env.VITE_API_URL || 'https://blood-and-organ-donar-matching-system.onrender.com', {
       auth: { token },
       transports: ['websocket', 'polling'],
     });
