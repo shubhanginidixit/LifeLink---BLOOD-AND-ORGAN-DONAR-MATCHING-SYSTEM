@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LocationProvider } from './context/LocationContext';
@@ -26,9 +26,11 @@ function ProtectedRoute({ children }) {
 
 function PublicOnlyRoute({ children }) {
   const { isAuthenticated, loading, logout } = useAuth();
+  const didLogout = useRef(false);
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    if (!loading && isAuthenticated && !didLogout.current) {
+      didLogout.current = true;
       logout();
     }
   }, [loading, isAuthenticated]);
