@@ -3,6 +3,8 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/:match+", "destination": "https://blood-and-organ-donar-matching-system.onrender.com/api/:match+" },
+    { "source": "/socket.io/:match+", "destination": "https://blood-and-organ-donar-matching-system.onrender.com/socket.io/:match+" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

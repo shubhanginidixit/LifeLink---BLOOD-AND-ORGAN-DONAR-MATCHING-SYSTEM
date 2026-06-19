@@ -134,4 +134,8 @@ function emitToUser(userId, event, data) {
   }
 }
 
-module.exports = { initSocket, getIO, isUserOnline, emitToUser };
+function emitToAll(event, data) {
+  if (io) io.emit(event, data);
+}
+
+module.exports = { initSocket, getIO, isUserOnline, emitToUser, emitToAll };

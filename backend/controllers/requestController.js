@@ -5,7 +5,7 @@ const Hospital = require("../models/Hospital");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const sendEmail = require("../utils/sendEmail");
-const { isUserOnline, emitToUser } = require("../socket");
+const { isUserOnline, emitToUser, emitToAll } = require("../socket");
 const { sendPushNotification } = require("../utils/push");
 
 // @desc    Create a new donation request
@@ -159,6 +159,7 @@ const getRequests = asyncHandler(async (req, res) => {
   const requests = await Request.find()
     .populate("hospital", "hospitalName city phone")
     .populate("matchedDonor", "name phone")
+    .populate("requestedBy", "profile.name profile.bloodGroup profile.city")
     .sort({ createdAt: -1 });
 
   res.json(requests);
@@ -287,6 +288,19 @@ const createDonorRequest = asyncHandler(async (req, res) => {
       }
     }
   }
+
+  emitToAll("new-request", {
+    _id: request._id,
+    requestType: request.requestType,
+    bloodGroup: request.bloodGroup,
+    organType: request.organType,
+    city: userCity,
+    status: "Pending",
+    isEmergency: request.isEmergency,
+    urgencyLevel: request.urgencyLevel,
+    createdAt: request.createdAt,
+    requestedBy: { _id: req.user._id, name: req.user.profile?.name || "User", bloodGroup: req.user.profile?.bloodGroup || "" },
+  });
 
   res.status(201).json(request);
 });

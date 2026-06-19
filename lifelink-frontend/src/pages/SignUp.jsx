@@ -7,12 +7,13 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import { validateEmail, validatePhone } from '../utils/helpers';
 import './Auth.css';
 
 export default function SignUp() {
-  const { signUp } = useAuth();
+  const { signUp, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -128,6 +129,30 @@ export default function SignUp() {
             Sign Up
           </button>
         </form>
+
+        <div className="auth-divider">
+          <span>or continue with</span>
+        </div>
+
+        <div className="google-btn-wrapper">
+          <GoogleLogin
+            onSuccess={async (credentialResponse) => {
+              setError('');
+              const result = await googleLogin(credentialResponse);
+              if (!result.success) {
+                setError(result.error);
+                return;
+              }
+              navigate('/dashboard');
+            }}
+            onError={() => setError('Google sign-in failed. Please try again.')}
+            theme="outline"
+            size="large"
+            width="100%"
+            text="signup_with"
+            shape="rectangular"
+          />
+        </div>
 
         <p className="auth-footer">
           Already have an account? <Link to="/login">Login</Link>

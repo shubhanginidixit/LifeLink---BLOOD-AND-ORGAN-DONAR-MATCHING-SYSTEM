@@ -2,8 +2,10 @@ import axios from 'axios';
 
 const TOKEN_KEY = 'lifelink_token';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://blood-and-organ-donar-matching-system.onrender.com';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: `${API_URL}/api`,
 });
 
 api.interceptors.request.use((config) => {
