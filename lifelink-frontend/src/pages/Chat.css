@@ -258,3 +258,31 @@
   color: var(--text-muted);
   font-size: 0.9rem;
 }
+
+.chat-connection-banner {
+  text-align: center;
+  padding: 8px 16px;
+  margin: 8px 16px;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.chat-error-banner {
+  text-align: center;
+  padding: 8px 16px;
+  margin: 0 20px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+}
