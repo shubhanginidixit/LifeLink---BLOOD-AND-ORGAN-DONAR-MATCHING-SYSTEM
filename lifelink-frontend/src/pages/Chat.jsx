@@ -9,12 +9,13 @@ export default function Chat() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { socket, onlineUsers } = useSocket();
+  const { socket, connected, onlineUsers } = useSocket();
   const [conversations, setConversations] = useState([]);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [typing, setTyping] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
+  const [chatError, setChatError] = useState('');
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -24,6 +25,7 @@ export default function Chat() {
 
   useEffect(() => {
     if (!userId) return;
+    setChatError('');
     api.get(`/chat/${userId}`).then(({ data }) => setMessages(data)).catch(() => {});
     api.post(`/chat/${userId}/read`).catch(() => {});
     setOtherTyping(false);
@@ -32,7 +34,7 @@ export default function Chat() {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('receive-message', (msg) => {
+    const onReceiveMessage = (msg) => {
       if (msg.sender === userId) {
         setMessages((prev) => [...prev, msg]);
         socket.emit('mark-read', { userId });
@@ -42,7 +44,7 @@ export default function Chat() {
         const updated = {
           userId: msg.sender,
           lastMessage: msg.text,
-          lastMessageTime: msg.timestamp,
+          lastMessageTime: msg.createdAt,
           unreadCount: msg.sender === userId ? 0 : (prev[idx]?.unreadCount || 0) + 1,
           name: prev[idx]?.name || 'User',
           bloodGroup: prev[idx]?.bloodGroup || '',
@@ -55,32 +57,52 @@ export default function Chat() {
         }
         return [updated, ...prev];
       });
-    });
+    };
 
-    socket.on('message-sent', (msg) => {
-      setMessages((prev) => [...prev, { ...msg, self: true }]);
-    });
+    const onMessageSent = (msg) => {
+      setMessages((prev) => [...prev, {
+        _id: msg._id,
+        sender: msg.sender,
+        receiver: msg.receiver,
+        text: msg.text,
+        createdAt: msg.createdAt,
+        read: msg.read,
+      }]);
+    };
 
-    socket.on('user-typing', ({ userId: uid }) => {
+    const onChatError = (err) => {
+      console.error('Chat error:', err.message);
+      setChatError(err.message || 'Failed to send message');
+    };
+
+    const onUserTyping = ({ userId: uid }) => {
       if (uid === userId) setOtherTyping(true);
-    });
+    };
 
-    socket.on('user-stop-typing', ({ userId: uid }) => {
+    const onUserStopTyping = ({ userId: uid }) => {
       if (uid === userId) setOtherTyping(false);
-    });
+    };
 
-    socket.on('messages-read', ({ userId: uid }) => {
+    const onMessagesRead = ({ userId: uid }) => {
       if (uid === userId) {
         setMessages((prev) => prev.map((m) => ({ ...m, read: true })));
       }
-    });
+    };
+
+    socket.on('receive-message', onReceiveMessage);
+    socket.on('message-sent', onMessageSent);
+    socket.on('chat-error', onChatError);
+    socket.on('user-typing', onUserTyping);
+    socket.on('user-stop-typing', onUserStopTyping);
+    socket.on('messages-read', onMessagesRead);
 
     return () => {
-      socket.off('receive-message');
-      socket.off('message-sent');
-      socket.off('user-typing');
-      socket.off('user-stop-typing');
-      socket.off('messages-read');
+      socket.off('receive-message', onReceiveMessage);
+      socket.off('message-sent', onMessageSent);
+      socket.off('chat-error', onChatError);
+      socket.off('user-typing', onUserTyping);
+      socket.off('user-stop-typing', onUserStopTyping);
+      socket.off('messages-read', onMessagesRead);
     };
   }, [socket, userId]);
 
@@ -90,7 +112,12 @@ export default function Chat() {
 
   const handleSend = (e) => {
     e.preventDefault();
+    setChatError('');
     if (!input.trim() || !userId || !socket) return;
+    if (!connected) {
+      setChatError('Not connected. Please wait for reconnection...');
+      return;
+    }
 
     socket.emit('send-message', { receiverId: userId, text: input.trim() });
     socket.emit('stop-typing', { receiverId: userId });
@@ -100,7 +127,8 @@ export default function Chat() {
 
   const handleInput = (e) => {
     setInput(e.target.value);
-    if (!socket || !userId) return;
+    setChatError('');
+    if (!socket || !userId || !connected) return;
 
     if (!typing) {
       setTyping(true);
@@ -114,6 +142,7 @@ export default function Chat() {
   };
 
   const formatTime = (dateStr) => {
+    if (!dateStr) return '';
     const d = new Date(dateStr);
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -123,9 +152,15 @@ export default function Chat() {
       <div className="chat-page">
         <div className="chat-list">
           <h2>Conversations</h2>
+          {!connected && (
+            <div className="chat-connection-banner">
+              Reconnecting to server...
+            </div>
+          )}
           {conversations.length === 0 ? (
             <div className="empty-state glass">
               <p>No conversations yet.</p>
+              <p style={{ fontSize: '0.8rem', marginTop: 8 }}>Start a chat from donor search results.</p>
             </div>
           ) : (
             conversations.map((conv) => (
@@ -176,25 +211,31 @@ export default function Chat() {
               {conversations.find((c) => c.userId === userId)?.name || 'User'}
             </div>
             <div className={`chat-header-status ${otherOnline ? 'online' : ''}`}>
-              {otherOnline ? 'Online' : 'Offline'}
+              {!connected ? 'Reconnecting...' : otherOnline ? 'Online' : 'Offline'}
             </div>
           </div>
         </div>
       </div>
 
       <div className="chat-messages">
+        {!connected && (
+          <div className="chat-connection-banner">
+            Reconnecting to server...
+          </div>
+        )}
         {messages.length === 0 && (
           <div className="empty-state">
             <p>Send a message to start the conversation.</p>
           </div>
         )}
         {messages.map((msg) => {
-          const isSelf = msg.sender === user?._id || msg.sender?._id === user?._id;
+          const senderId = typeof msg.sender === 'object' ? msg.sender?._id : msg.sender;
+          const isSelf = senderId === user?._id;
           return (
             <div key={msg._id} className={`chat-bubble ${isSelf ? 'self' : 'other'}`}>
               <div className="chat-bubble-text">{msg.text}</div>
               <div className="chat-bubble-time">
-                {formatTime(msg.timestamp || msg.createdAt)}
+                {formatTime(msg.createdAt)}
                 {isSelf && msg.read && <span className="chat-read-check"> ✓✓</span>}
               </div>
             </div>
@@ -210,16 +251,21 @@ export default function Chat() {
         <div ref={messagesEndRef} />
       </div>
 
+      {chatError && (
+        <div className="chat-error-banner">{chatError}</div>
+      )}
+
       <form className="chat-input-bar" onSubmit={handleSend}>
         <input
           className="form-input chat-input"
           type="text"
-          placeholder="Type a message..."
+          placeholder={!connected ? 'Reconnecting...' : 'Type a message...'}
           value={input}
           onChange={handleInput}
           autoComplete="off"
+          disabled={!connected}
         />
-        <button type="submit" className="btn btn-primary" disabled={!input.trim()}>
+        <button type="submit" className="btn btn-primary" disabled={!input.trim() || !connected}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="22" y1="2" x2="11" y2="13" />
             <polygon points="22 2 15 22 11 13 2 9 22 2" />
