@@ -142,6 +142,30 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  // ── Auth: Google Login ────────────────────────────
+  const googleLogin = useCallback(async (credentialResponse) => {
+    try {
+      const { data } = await api.post('/auth/google', {
+        credential: credentialResponse.credential,
+      });
+      const userData = data.user || data;
+      setUser(userData);
+      setToken(data.token);
+      setBlockedIds(userData.blockedIds || []);
+
+      const [notifsRes, callsRes] = await Promise.all([
+        api.get('/notifications').catch(() => ({ data: [] })),
+        api.get('/calls').catch(() => ({ data: [] })),
+      ]);
+      setNotifications(notifsRes.data || []);
+      setCallLogs(callsRes.data || []);
+
+      return { success: true, user: userData };
+    } catch (err) {
+      return { success: false, error: err.response?.data?.message || err.message };
+    }
+  }, []);
+
   // ── Profile: Complete Profile ──────────────────────
   const completeProfile = useCallback(async (profileData) => {
     try {
@@ -269,6 +293,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         resetPassword,
+        googleLogin,
         completeProfile,
         updateProfile,
         deleteAccount,

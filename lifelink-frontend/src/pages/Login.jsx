@@ -7,11 +7,12 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -89,6 +90,34 @@ export default function Login() {
             Login
           </button>
         </form>
+
+        <div className="auth-divider">
+          <span>or continue with</span>
+        </div>
+
+        <div className="google-btn-wrapper">
+          <GoogleLogin
+            onSuccess={async (credentialResponse) => {
+              setError('');
+              const result = await googleLogin(credentialResponse);
+              if (!result.success) {
+                setError(result.error);
+                return;
+              }
+              if (!result.user.profileComplete) {
+                navigate('/complete-profile');
+              } else {
+                navigate('/dashboard');
+              }
+            }}
+            onError={() => setError('Google sign-in failed. Please try again.')}
+            theme="outline"
+            size="large"
+            width="100%"
+            text="signin_with"
+            shape="rectangular"
+          />
+        </div>
 
         <p className="auth-footer">
           <Link to="/forgot-password">Forgot password?</Link>

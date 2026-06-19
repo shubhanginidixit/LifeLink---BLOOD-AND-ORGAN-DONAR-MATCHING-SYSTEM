@@ -11,14 +11,26 @@ const userSchema = new mongoose.Schema({
 
   phone: {
     type: String,
-    required: true,
+    required: false,
     unique: true,
+    sparse: true,
     trim: true
   },
 
   password: {
     type: String,
-    required: true
+    required: false
+  },
+
+  googleId: {
+    type: String,
+    default: null,
+    sparse: true
+  },
+
+  avatar: {
+    type: String,
+    default: ""
   },
 
   role: {
