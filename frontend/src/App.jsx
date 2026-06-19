@@ -10,6 +10,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 // Pages
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ResetPassword from './pages/ResetPassword';
 import DashboardPage from './pages/DashboardPage';
 import DonorRegistrationPage from './pages/DonorRegistrationPage';
 import EmergencyRequestPage from './pages/EmergencyRequestPage';
@@ -25,17 +26,18 @@ const App = () => {
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
           {/* Protected Registration Flow */}
           <Route element={<AuthLayout />}>
-            <Route 
-              path="/register-donor" 
+            <Route
+              path="/register-donor"
               element={
                 <ProtectedRoute requiredRole="donor">
                   <DonorRegistrationPage />
                 </ProtectedRoute>
-              } 
+              }
             />
           </Route>
 
@@ -44,17 +46,17 @@ const App = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/charts" element={<ChartsPage />} />
             <Route path="/map" element={<MapPage />} />
-            
+
             {/* Hospital Only */}
-            <Route 
-              path="/emergency" 
+            <Route
+              path="/emergency"
               element={
                 <ProtectedRoute requiredRole="hospital">
                   <EmergencyRequestPage />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* Redirects */}
             <Route path="/donors" element={<Navigate to="/dashboard" replace />} />
             <Route path="/requests" element={<Navigate to="/dashboard" replace />} />
