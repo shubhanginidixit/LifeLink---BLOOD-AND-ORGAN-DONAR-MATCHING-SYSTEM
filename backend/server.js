@@ -48,6 +48,12 @@ app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/calls", require("./routes/callLogRoutes"));
 app.use("/api/chat", require("./routes/chatRoutes"));
 
+app.use((req, res, next) => {
+  res.status(404);
+  const error = new Error(`Route Not Found - ${req.originalUrl}`);
+  next(error);
+});
+
 app.use(errorHandler);
 
 const server = http.createServer(app);
