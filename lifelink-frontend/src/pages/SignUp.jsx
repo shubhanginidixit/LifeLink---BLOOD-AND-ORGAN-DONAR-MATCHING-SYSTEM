@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import { validateEmail, validatePhone } from '../utils/helpers';
 import './Auth.css';
 
+
 export default function SignUp() {
   const { signUp, googleLogin } = useAuth();
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function SignUp() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,11 +52,18 @@ export default function SignUp() {
 
     alert("Account created successfully!");
 
-    if (!result.user.profileComplete) {
-      navigate('/complete-profile');
-    } else {
-      navigate('/dashboard');
-    }
+    setShowSuccess(true);
+
+    setTimeout(() => {
+      if (!result.user.profileComplete) {
+        navigate('/complete-profile');
+      }
+      else {
+        navigate('/dashboard');
+      }
+    }, 2000);
+
+    return;
   };
 
   return (
@@ -188,6 +197,15 @@ export default function SignUp() {
           </Link>
         </p>
       </div>
+      {showSuccess && (
+        <div className="success-modal-overlay">
+          <div className="success-modal">
+            <div className="success-icon">✓</div>
+            <h3>Account Created Successfully!</h3>
+            <p>Welcome to LifeLink. Redirecting...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
