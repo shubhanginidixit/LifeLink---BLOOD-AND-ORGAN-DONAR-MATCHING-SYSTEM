@@ -56,7 +56,21 @@ export default function SignUp() {
 
   return (
     <div className="auth-page">
-      <div className="bg-gradient" />
+      <div className="auth-bg-icons">
+        <img src="/heart.avif" className="auth-bg-icon i1" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i2" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i3" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i4" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i5" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i6" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i7" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i8" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i9" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i10" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i11" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i12" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i13" alt="" />
+      </div>
       <div className="auth-card glass-strong">
         <div className="auth-logo">
           <svg width="30" height="30" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
