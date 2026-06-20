@@ -5,7 +5,7 @@ const Hospital = require("../models/Hospital");
 const User = require("../models/User");
 const Notification = require("../models/Notification");
 const sendEmail = require("../utils/sendEmail");
-const { isUserOnline, emitToUser, emitToAll } = require("../socket");
+const { isUserOnline, emitToUser, emitToAll } = require("../sse");
 const { sendPushNotification } = require("../utils/push");
 
 // @desc    Create a new donation request
@@ -57,90 +57,102 @@ const createRequest = asyncHandler(async (req, res) => {
     await matchedDonor.save();
 
     if (matchedDonor.user) {
-      const notification = await Notification.create({
-        user: matchedDonor.user._id,
-        title: "Match Found!",
-        message: `You have been matched with ${hospitalProfile.hospitalName} for a ${requestType} donation.`,
-        type: "match"
-      });
+      (async () => {
+        try {
+          const notification = await Notification.create({
+            user: matchedDonor.user._id,
+            title: "Match Found!",
+            message: `You have been matched with ${hospitalProfile.hospitalName} for a ${requestType} donation.`,
+            type: "match"
+          });
 
-      emitToUser(matchedDonor.user._id.toString(), "new-notification", {
-        _id: notification._id,
-        title: notification.title,
-        message: notification.message,
-        type: notification.type,
-        read: false,
-        createdAt: notification.createdAt,
-      });
+          emitToUser(matchedDonor.user._id.toString(), "new-notification", {
+            _id: notification._id,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            read: false,
+            createdAt: notification.createdAt,
+          });
 
-      if (!isUserOnline(matchedDonor.user._id.toString())) {
-        const donorUser = await User.findById(matchedDonor.user._id).select("fcmToken");
-        if (donorUser?.fcmToken) {
-          const result = await sendPushNotification(
-            donorUser.fcmToken,
-            notification.title,
-            notification.message,
-            { redirect: "/dashboard" }
-          );
-          if (result === "invalid") {
-            donorUser.fcmToken = "";
-            await donorUser.save();
+          if (!isUserOnline(matchedDonor.user._id.toString())) {
+            const donorUser = await User.findById(matchedDonor.user._id).select("fcmToken");
+            if (donorUser?.fcmToken) {
+              const result = await sendPushNotification(
+                donorUser.fcmToken,
+                notification.title,
+                notification.message,
+                { redirect: "/dashboard" }
+              );
+              if (result === "invalid") {
+                donorUser.fcmToken = "";
+                await donorUser.save();
+              }
+            }
           }
-        }
-      }
 
-      if (matchedDonor.user.email) {
-        await sendEmail({
-          email: matchedDonor.user.email,
-          subject: "Urgent: You've been matched for a donation!",
-          message: `Hello,\n\nYou have been matched with ${hospitalProfile.hospitalName} for a ${requestType} donation.\n\nPlease contact them immediately at ${hospitalProfile.phone || hospitalProfile.email} to coordinate.`
-        });
-      }
+          if (matchedDonor.user.email) {
+            await sendEmail({
+              email: matchedDonor.user.email,
+              subject: "Urgent: You've been matched for a donation!",
+              message: `Hello,\n\nYou have been matched with ${hospitalProfile.hospitalName} for a ${requestType} donation.\n\nPlease contact them immediately at ${hospitalProfile.phone || hospitalProfile.email} to coordinate.`
+            });
+          }
+        } catch (err) {
+          console.error("Match notification error: ", err);
+        }
+      })();
     }
   } else if (isEmergency) {
     const emergencyDonors = await Donor.find({ city: request.city, available: true }).populate("user", "email");
     
     for (const d of emergencyDonors) {
       if (d.user) {
-        const notification = await Notification.create({
-          user: d.user._id,
-          title: "EMERGENCY in your city!",
-          message: `${hospitalProfile.hospitalName} is in critical need of ${bloodGroup || organType}.`,
-          type: "emergency"
-        });
+        (async () => {
+          try {
+            const notification = await Notification.create({
+              user: d.user._id,
+              title: "EMERGENCY in your city!",
+              message: `${hospitalProfile.hospitalName} is in critical need of ${bloodGroup || organType}.`,
+              type: "emergency"
+            });
 
-        emitToUser(d.user._id.toString(), "new-notification", {
-          _id: notification._id,
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          read: false,
-          createdAt: notification.createdAt,
-        });
+            emitToUser(d.user._id.toString(), "new-notification", {
+              _id: notification._id,
+              title: notification.title,
+              message: notification.message,
+              type: notification.type,
+              read: false,
+              createdAt: notification.createdAt,
+            });
 
-        if (!isUserOnline(d.user._id.toString())) {
-          const emergencyUser = await User.findById(d.user._id).select("fcmToken");
-          if (emergencyUser?.fcmToken) {
-            const result = await sendPushNotification(
-              emergencyUser.fcmToken,
-              notification.title,
-              notification.message,
-              { redirect: "/dashboard" }
-            );
-            if (result === "invalid") {
-              emergencyUser.fcmToken = "";
-              await emergencyUser.save();
+            if (!isUserOnline(d.user._id.toString())) {
+              const emergencyUser = await User.findById(d.user._id).select("fcmToken");
+              if (emergencyUser?.fcmToken) {
+                const result = await sendPushNotification(
+                  emergencyUser.fcmToken,
+                  notification.title,
+                  notification.message,
+                  { redirect: "/dashboard" }
+                );
+                if (result === "invalid") {
+                  emergencyUser.fcmToken = "";
+                  await emergencyUser.save();
+                }
+              }
             }
-          }
-        }
 
-        if (d.user.email) {
-          await sendEmail({
-            email: d.user.email,
-            subject: "EMERGENCY ALERT: Immediate Donation Needed in Your City!",
-            message: `URGENT: ${hospitalProfile.hospitalName} in ${request.city} is in critical need of ${bloodGroup || organType}. If you are able to help, please contact them immediately at ${hospitalProfile.phone || hospitalProfile.email}.`
-          });
-        }
+            if (d.user.email) {
+              await sendEmail({
+                email: d.user.email,
+                subject: "EMERGENCY ALERT: Immediate Donation Needed in Your City!",
+                message: `URGENT: ${hospitalProfile.hospitalName} in ${request.city} is in critical need of ${bloodGroup || organType}. If you are able to help, please contact them immediately at ${hospitalProfile.phone || hospitalProfile.email}.`
+              });
+            }
+          } catch (err) {
+            console.error("Emergency notification error: ", err);
+          }
+        })();
       }
     }
   }
@@ -186,7 +198,7 @@ const updateRequest = asyncHandler(async (req, res) => {
   const updatedRequest = await Request.findByIdAndUpdate(
     req.params.id,
     req.body,
-    { new: true }
+    { new: true, runValidators: true }
   )
     .populate("hospital", "hospitalName")
     .populate("matchedDonor", "name");
@@ -240,53 +252,55 @@ const createDonorRequest = asyncHandler(async (req, res) => {
   for (const matchedUser of matchingUsers) {
     if (matchedUser._id.toString() === req.user._id.toString()) continue;
 
-    const notification = await Notification.create({
-      user: matchedUser._id,
-      title: isEmergency ? "EMERGENCY Request Near You!" : "New Donation Request",
-      message: `A ${requestType} donation request${bloodGroup ? ` for ${bloodGroup}` : ""}${organType ? ` (${organType})` : ""} has been posted in ${userCity}.`,
-      type: isEmergency ? "emergency" : "match",
-      redirect: "/dashboard",
-    });
-
-    emitToUser(matchedUser._id.toString(), "new-notification", {
-      _id: notification._id,
-      title: notification.title,
-      message: notification.message,
-      type: notification.type,
-      redirect: notification.redirect,
-      read: false,
-      createdAt: notification.createdAt,
-    });
-
-    if (!isUserOnline(matchedUser._id.toString())) {
-      const user = await User.findById(matchedUser._id).select("fcmToken");
-      if (user?.fcmToken) {
-        const result = await sendPushNotification(
-          user.fcmToken,
-          notification.title,
-          notification.message,
-          { redirect: notification.redirect || "/dashboard" }
-        );
-        if (result === "invalid") {
-          user.fcmToken = "";
-          await user.save();
-        }
-      }
-    }
-
-    if (matchedUser.email) {
+    (async () => {
       try {
-        await sendEmail({
-          email: matchedUser.email,
-          subject: isEmergency
-            ? `EMERGENCY: ${requestType} donation needed in ${userCity}`
-            : `New ${requestType} donation request in ${userCity}`,
-          message: `A ${requestType} donation request has been posted in ${userCity}. Log in to LIFELINK to view details and respond.`,
+        const notification = await Notification.create({
+          user: matchedUser._id,
+          title: isEmergency ? "EMERGENCY Request Near You!" : "New Donation Request",
+          message: `A ${requestType} donation request${bloodGroup ? ` for ${bloodGroup}` : ""}${organType ? ` (${organType})` : ""} has been posted in ${userCity}.`,
+          type: isEmergency ? "emergency" : "match",
+          redirect: "/dashboard",
         });
+
+        emitToUser(matchedUser._id.toString(), "new-notification", {
+          _id: notification._id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          redirect: notification.redirect,
+          read: false,
+          createdAt: notification.createdAt,
+        });
+
+        if (!isUserOnline(matchedUser._id.toString())) {
+          const user = await User.findById(matchedUser._id).select("fcmToken");
+          if (user?.fcmToken) {
+            const result = await sendPushNotification(
+              user.fcmToken,
+              notification.title,
+              notification.message,
+              { redirect: notification.redirect || "/dashboard" }
+            );
+            if (result === "invalid") {
+              user.fcmToken = "";
+              await user.save();
+            }
+          }
+        }
+
+        if (matchedUser.email) {
+          await sendEmail({
+            email: matchedUser.email,
+            subject: isEmergency
+              ? `EMERGENCY: ${requestType} donation needed in ${userCity}`
+              : `New ${requestType} donation request in ${userCity}`,
+            message: `A ${requestType} donation request has been posted in ${userCity}. Log in to LIFELINK to view details and respond.`,
+          });
+        }
       } catch (e) {
-        // Email send failure is non-critical
+        console.error("Donor match notification error: ", e);
       }
-    }
+    })();
   }
 
   emitToAll("new-request", {

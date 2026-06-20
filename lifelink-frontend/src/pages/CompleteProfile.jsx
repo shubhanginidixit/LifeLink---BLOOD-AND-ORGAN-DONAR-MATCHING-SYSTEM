@@ -141,7 +141,21 @@ export default function CompleteProfile() {
 
   return (
     <div className="profile-page">
-      <div className="bg-gradient" />
+      <div className="auth-bg-icons">
+        <img src="/heart.avif" className="auth-bg-icon i1" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i2" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i3" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i4" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i5" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i6" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i7" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i8" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i9" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i10" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i11" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i12" alt="" />
+        <img src="/heart.avif" className="auth-bg-icon i13" alt="" />
+      </div>
       <div className="profile-card glass-strong">
         <h2>Complete Your Profile</h2>
         <p className="auth-subtitle">

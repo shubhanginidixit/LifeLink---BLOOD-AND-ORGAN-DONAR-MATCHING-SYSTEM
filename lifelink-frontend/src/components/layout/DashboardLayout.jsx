@@ -9,6 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation as useAppLocation } from '../../context/LocationContext';
+import PaperBackground from '../ui/PaperBackground';
 import './DashboardLayout.css';
 
 function getNavIcon(label) {
@@ -258,12 +259,7 @@ export function TopBar() {
 export default function DashboardLayout({ children }) {
   return (
     <div className="dashboard-layout">
-      <div className="bg-gradient">
-        <div className="blob blob-1" />
-        <div className="blob blob-2" />
-        <div className="blob blob-3" />
-        <div className="blob blob-4" />
-      </div>
+      <PaperBackground />
       <TopBar />
       <div className="dashboard-body">
         <Sidebar />

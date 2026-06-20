@@ -1,83 +1,125 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import api from '../api/axios';
 
 const SocketContext = createContext(null);
 
 export function SocketProvider({ children }) {
   const { token, user } = useAuth();
-  const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const socketRef = useRef(null);
+  const esRef = useRef(null);
+  const listenersRef = useRef(new Map());
 
   useEffect(() => {
     if (!token || !user) {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
       }
-      setSocket(null);
       setConnected(false);
       setOnlineUsers([]);
       return;
     }
 
     const serverUrl = import.meta.env.VITE_API_URL || 'https://blood-and-organ-donar-matching-system.onrender.com';
+    const url = `${serverUrl}/api/stream?token=${token}`;
 
-    const s = io(serverUrl, {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 2000,
-      reconnectionDelayMax: 10000,
-      timeout: 10000,
-    });
+    const es = new EventSource(url);
+    esRef.current = es;
 
-    s.on('connect', () => {
-      console.log('Socket connected');
+    const dispatch = (event, data) => {
+      const handlers = listenersRef.current.get(event);
+      if (handlers) {
+        for (const handler of handlers) {
+          handler(data);
+        }
+      }
+    };
+
+    es.addEventListener('connect', () => {
+      console.log('SSE connected');
       setConnected(true);
     });
 
-    s.on('disconnect', (reason) => {
-      console.log('Socket disconnected:', reason);
+    es.addEventListener('online-users', (e) => {
+      try { setOnlineUsers(JSON.parse(e.data)); } catch {}
+    });
+
+    es.addEventListener('new-notification', (e) => {
+      try { dispatch('new-notification', JSON.parse(e.data)); } catch {}
+    });
+
+    es.addEventListener('new-request', (e) => {
+      try { dispatch('new-request', JSON.parse(e.data)); } catch {}
+    });
+
+    es.addEventListener('receive-message', (e) => {
+      try { dispatch('receive-message', JSON.parse(e.data)); } catch {}
+    });
+
+    es.addEventListener('message-sent', (e) => {
+      try { dispatch('message-sent', JSON.parse(e.data)); } catch {}
+    });
+
+    es.addEventListener('chat-error', (e) => {
+      try { dispatch('chat-error', JSON.parse(e.data)); } catch {}
+    });
+
+    es.addEventListener('user-typing', (e) => {
+      try { dispatch('user-typing', JSON.parse(e.data)); } catch {}
+    });
+
+    es.addEventListener('user-stop-typing', (e) => {
+      try { dispatch('user-stop-typing', JSON.parse(e.data)); } catch {}
+    });
+
+    es.addEventListener('messages-read', (e) => {
+      try { dispatch('messages-read', JSON.parse(e.data)); } catch {}
+    });
+
+    es.onerror = () => {
+      console.log('SSE connection error / reconnecting');
       setConnected(false);
-    });
-
-    s.on('connect_error', (err) => {
-      console.error('Socket connection error:', err.message);
-      setConnected(false);
-    });
-
-    s.on('reconnect', (attempt) => {
-      console.log('Socket reconnected after', attempt, 'attempts');
-      setConnected(true);
-    });
-
-    s.on('reconnect_attempt', (attempt) => {
-      console.log('Socket reconnect attempt:', attempt);
-    });
-
-    s.on('reconnect_failed', () => {
-      console.error('Socket reconnect failed - all attempts exhausted');
-      setConnected(false);
-    });
-
-    s.on('online-users', (users) => {
-      setOnlineUsers(users);
-    });
-
-    socketRef.current = s;
-    setSocket(s);
+    };
 
     return () => {
-      s.disconnect();
-      socketRef.current = null;
-      setSocket(null);
+      es.close();
+      esRef.current = null;
       setConnected(false);
     };
   }, [token, user]);
+
+  const socket = useRef({
+    _handlers: new Map(),
+    on(event, handler) {
+      if (!this._handlers.has(event)) this._handlers.set(event, new Set());
+      this._handlers.get(event).add(handler);
+      listenersRef.current = this._handlers;
+    },
+    off(event, handler) {
+      const set = this._handlers.get(event);
+      if (set) set.delete(handler);
+      listenersRef.current = this._handlers;
+    },
+    emit(event, data) {
+      if (event === 'send-message') {
+        api.post(`/chat/${data.receiverId}/send`, { text: data.text }).catch(() => {});
+      } else if (event === 'typing') {
+        api.post(`/chat/${data.receiverId}/typing`).catch(() => {});
+      } else if (event === 'stop-typing') {
+        api.post(`/chat/${data.receiverId}/stop-typing`).catch(() => {});
+      } else if (event === 'mark-read') {
+        api.post(`/chat/${data.userId}/read`).catch(() => {});
+      }
+    },
+    disconnect() {
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
+    },
+  }).current;
 
   return (
     <SocketContext.Provider value={{ socket, connected, onlineUsers }}>

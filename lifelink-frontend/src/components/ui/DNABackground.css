@@ -1,0 +1,13 @@
+.dna-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.35;
+}
+
+.dna-bg canvas {
+  width: 100%;
+  height: 100%;
+}

@@ -26,17 +26,10 @@ function ProtectedRoute({ children }) {
 }
 
 function PublicOnlyRoute({ children }) {
-  const { isAuthenticated, loading, logout } = useAuth();
-  const didLogout = useRef(false);
-
-  useEffect(() => {
-    if (!loading && isAuthenticated && !didLogout.current) {
-      didLogout.current = true;
-      logout();
-    }
-  }, [loading, isAuthenticated]);
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) return null;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return children;
 }
 

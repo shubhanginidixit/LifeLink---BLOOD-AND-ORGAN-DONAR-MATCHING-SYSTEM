@@ -4,12 +4,20 @@
   flex-direction: column;
   overflow: hidden;
   background: transparent;
+  position: relative;
+}
+
+.dashboard-layout > *:not(.paper-bg) {
+  position: relative;
+  z-index: 1;
 }
 
 .dashboard-body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .dashboard-main {
@@ -750,6 +758,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  background: #f0f2f5;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.03) 0%, transparent 60%);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .profile-card {
@@ -770,6 +790,8 @@
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   text-align: left;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-card h2 {

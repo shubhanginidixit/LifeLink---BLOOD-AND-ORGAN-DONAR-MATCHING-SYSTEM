@@ -5,7 +5,7 @@ const dotenv = require("dotenv");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const { errorHandler } = require("./middleware/errorMiddleware");
-const { initSocket } = require("./socket");
+const { initSSE } = require("./sse");
 const { initFirebase } = require("./utils/push");
 
 dotenv.config();
@@ -48,11 +48,17 @@ app.use("/api/notifications", require("./routes/notificationRoutes"));
 app.use("/api/calls", require("./routes/callLogRoutes"));
 app.use("/api/chat", require("./routes/chatRoutes"));
 
+app.use((req, res, next) => {
+  res.status(404);
+  const error = new Error(`Route Not Found - ${req.originalUrl}`);
+  next(error);
+});
+
 app.use(errorHandler);
 
 const server = http.createServer(app);
 
-initSocket(server);
+initSSE(app);
 initFirebase();
 
 const PORT = process.env.PORT || 5000;

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import LandingNavbar from '../components/layout/LandingNavbar';
 import DonorCard from '../components/ui/DonorCard';
 import ContactModal from '../components/ui/ContactModal';
+import DNABackground from '../components/ui/DNABackground';
 import { useLocation } from '../context/LocationContext';
 import { BLOOD_GROUPS, ORGANS } from '../utils/helpers';
 import api from '../api/axios';
@@ -88,12 +89,7 @@ export default function Landing() {
 
   return (
     <div className="landing-page">
-      <div className="bg-gradient">
-        <div className="blob blob-1" />
-        <div className="blob blob-2" />
-        <div className="blob blob-3" />
-        <div className="blob blob-4" />
-      </div>
+      <DNABackground />
       <LandingNavbar />
 
       <section className="landing-hero">

@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Message = require("../models/Message");
 const User = require("../models/User");
+const { emitToUser } = require("../sse");
 
 const getChatHistory = asyncHandler(async (req, res) => {
   const otherUserId = req.params.userId;
@@ -98,7 +99,71 @@ const markMessagesRead = asyncHandler(async (req, res) => {
     { read: true }
   );
 
+  emitToUser(otherUserId.toString(), "messages-read", { userId: myId.toString() });
+
   res.json({ success: true });
 });
 
-module.exports = { getChatHistory, getChatList, markMessagesRead };
+const sendMessage = asyncHandler(async (req, res) => {
+  const receiverId = req.params.userId;
+  const senderId = req.user._id;
+  const { text } = req.body;
+
+  if (!text || !text.trim()) {
+    res.status(400);
+    throw new Error("Message text is required");
+  }
+
+  const msg = await Message.create({
+    sender: senderId,
+    receiver: receiverId,
+    text: text.trim(),
+  });
+
+  const populated = await msg.populate("sender", "profile.name");
+
+  const messageData = {
+    _id: msg._id,
+    sender: senderId.toString(),
+    receiver: receiverId,
+    text: msg.text,
+    createdAt: msg.createdAt,
+    read: false,
+  };
+
+  emitToUser(receiverId, "receive-message", {
+    ...messageData,
+    senderName: populated.sender?.profile?.name || "User",
+  });
+
+  emitToUser(senderId.toString(), "message-sent", messageData);
+
+  res.status(201).json(messageData);
+});
+
+const sendTyping = asyncHandler(async (req, res) => {
+  const receiverId = req.params.userId;
+  const senderId = req.user._id;
+
+  emitToUser(receiverId, "user-typing", { userId: senderId.toString() });
+
+  res.json({ success: true });
+});
+
+const sendStopTyping = asyncHandler(async (req, res) => {
+  const receiverId = req.params.userId;
+  const senderId = req.user._id;
+
+  emitToUser(receiverId, "user-stop-typing", { userId: senderId.toString() });
+
+  res.json({ success: true });
+});
+
+module.exports = {
+  getChatHistory,
+  getChatList,
+  markMessagesRead,
+  sendMessage,
+  sendTyping,
+  sendStopTyping,
+};
