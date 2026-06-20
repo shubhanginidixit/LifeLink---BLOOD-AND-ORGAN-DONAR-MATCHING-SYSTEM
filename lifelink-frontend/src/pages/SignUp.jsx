@@ -50,7 +50,7 @@ export default function SignUp() {
       return;
     }
 
-    alert("Account created successfully!");
+    // Custom success modal will be shown instead
 
     setShowSuccess(true);
 
