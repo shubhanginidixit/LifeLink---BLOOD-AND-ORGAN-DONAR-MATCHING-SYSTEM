@@ -101,7 +101,7 @@ function initSocket(server) {
           }
         }
       } catch (err) {
-        // non-critical
+        console.error("Mark read socket error:", err);
       }
     });
 
