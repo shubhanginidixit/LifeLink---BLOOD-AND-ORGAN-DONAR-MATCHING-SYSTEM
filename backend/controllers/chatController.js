@@ -138,6 +138,45 @@ const sendMessage = asyncHandler(async (req, res) => {
 
   emitToUser(senderId.toString(), "message-sent", messageData);
 
+  // Auto-reply simulation for demonstration
+  setTimeout(async () => {
+    try {
+      // Simulate the donor typing
+      emitToUser(senderId.toString(), "user-typing", { userId: receiverId.toString() });
+      
+      setTimeout(async () => {
+        emitToUser(senderId.toString(), "user-stop-typing", { userId: receiverId.toString() });
+        
+        const replyText = "Hello! I have received your message. Let me know how I can help!";
+        const replyMsg = await Message.create({
+          sender: receiverId,
+          receiver: senderId,
+          text: replyText,
+        });
+
+        const populatedReply = await replyMsg.populate("sender", "profile.name");
+
+        const replyData = {
+          _id: replyMsg._id,
+          sender: receiverId.toString(),
+          receiver: senderId.toString(),
+          text: replyMsg.text,
+          createdAt: replyMsg.createdAt,
+          read: false,
+        };
+
+        emitToUser(senderId.toString(), "receive-message", {
+          ...replyData,
+          senderName: populatedReply.sender?.profile?.name || "Donor",
+        });
+
+        emitToUser(receiverId.toString(), "message-sent", replyData);
+      }, 2500); // Stop typing and send after 2.5 seconds
+    } catch (err) {
+      console.error("Auto-reply error:", err);
+    }
+  }, 1000); // Start typing after 1 second
+
   res.status(201).json(messageData);
 });
 

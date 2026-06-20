@@ -22,7 +22,7 @@ export function SocketProvider({ children }) {
       return;
     }
 
-    const serverUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://blood-and-organ-donar-matching-system.onrender.com');
+    const serverUrl = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '' : 'https://blood-and-organ-donar-matching-system.onrender.com');
     const url = `${serverUrl}/api/stream?token=${token}`;
 
     const es = new EventSource(url);

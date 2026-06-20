@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const TOKEN_KEY = 'lifelink_token';
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : 'https://blood-and-organ-donar-matching-system.onrender.com');
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '' : 'https://blood-and-organ-donar-matching-system.onrender.com');
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
