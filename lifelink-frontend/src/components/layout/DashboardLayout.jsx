@@ -171,7 +171,7 @@ function Sidebar() {
 
 export function TopBar() {
   const { user, logout } = useAuth();
-  const { location, setPincode } = useAppLocation();
+  const { location, setPincode, requestGPS, loading } = useAppLocation();
   const navigate = useNavigate();
   const [showLocation, setShowLocation] = useState(false);
   const [pincodeInput, setPincodeInput] = useState(location.pincode || '');
@@ -236,6 +236,26 @@ export function TopBar() {
                 />
                 <button type="submit" className="btn btn-primary btn-sm" style={{ width: '100%', marginTop: 8 }}>
                   Update Location
+                </button>
+                <div style={{ textAlign: 'center', margin: '8px 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>OR</div>
+                <button 
+                  type="button" 
+                  className="btn btn-outline btn-sm" 
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                  onClick={async () => {
+                    try {
+                      await requestGPS();
+                      setShowLocation(false);
+                    } catch (err) {
+                      console.error("GPS Error", err);
+                    }
+                  }}
+                  disabled={loading}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                  </svg>
+                  {loading ? 'Detecting...' : 'Detect Live Location'}
                 </button>
               </form>
             </div>

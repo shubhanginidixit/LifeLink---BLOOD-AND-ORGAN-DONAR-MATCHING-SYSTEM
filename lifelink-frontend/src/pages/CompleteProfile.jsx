@@ -7,7 +7,7 @@ import './Auth.css';
 
 export default function CompleteProfile() {
   const { completeProfile } = useAuth();
-  const { location } = useLocation();
+  const { location, requestGPS, loading: gpsLoading } = useLocation();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -223,6 +223,36 @@ export default function CompleteProfile() {
                 <option value="Other">Other</option>
               </select>
             </div>
+          </div>
+
+          <p className="profile-section-title">Location *</p>
+          <div className="form-group">
+            <label className="form-label">Current City / Location</label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                className="form-input"
+                type="text"
+                value={location.city + (location.pincode ? ` (${location.pincode})` : '')}
+                disabled
+              />
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                onClick={async () => {
+                  try {
+                    await requestGPS();
+                  } catch (e) {
+                    console.error("GPS Error", e);
+                  }
+                }}
+                disabled={gpsLoading}
+                title="Detect Live Location"
+                style={{ flexShrink: 0 }}
+              >
+                {gpsLoading ? 'Detecting...' : '📍 GPS'}
+              </button>
+            </div>
+            <p className="form-hint" style={{ marginTop: 4 }}>Used to match you with nearby donors or recipients.</p>
           </div>
 
           <p className="profile-section-title">Medical Details (Optional)</p>
