@@ -21,39 +21,66 @@ export function LocationProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const requestGPS = useCallback(() => {
-    setLoading(true);
-    setError(null);
+ const requestGPS = useCallback(() => {
+  setLoading(true);
+  setError(null);
 
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
-      setLoading(false);
-      return Promise.reject(new Error('Not supported'));
-    }
+  if (!navigator.geolocation) {
+    setError("Geolocation is not supported by your browser");
+    setLoading(false);
+    return Promise.reject(new Error("Not supported"));
+  }
 
-    return new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+          );
+
+          const data = await response.json();
+
           const loc = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            city: 'Your Location',
-            pincode: '',
-            source: 'gps',
+            lat,
+            lng,
+            city:
+              data.address.city ||
+              data.address.town ||
+              data.address.village ||
+              data.address.state ||
+              "Unknown",
+            pincode: data.address.postcode || "",
+            source: "gps",
           };
+
           setLocation(loc);
           setLoading(false);
           resolve(loc);
-        },
-        () => {
-          setError('Unable to access location. Please enter pincode manually.');
+        } catch (err) {
+          console.error(err);
+          setError("Unable to detect your location.");
           setLoading(false);
-          reject(new Error('Permission denied'));
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    });
-  }, []);
+          reject(err);
+        }
+      },
+      (err) => {
+        console.error(err);
+        setError("Unable to access location.");
+        setLoading(false);
+        reject(err);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
+  });
+}, []);
 
   const setPincode = useCallback((pincode) => {
     const coords = getCoordsFromPincode(pincode);
