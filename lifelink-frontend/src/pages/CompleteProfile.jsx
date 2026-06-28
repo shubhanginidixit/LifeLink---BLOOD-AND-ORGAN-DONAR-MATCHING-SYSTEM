@@ -255,7 +255,26 @@ export default function CompleteProfile() {
                 title="Detect Live Location"
                 style={{ flexShrink: 0 }}
               >
-                {gpsLoading ? 'Detecting...' : '📍 GPS'}
+                 {gpsLoading ? (
+  'Detecting...'
+) : (
+  <>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      style={{ marginRight: 6, verticalAlign: "middle" }}
+    >
+      <path
+        fill="#E65100"
+        d="M12 2C7.58 2 4 5.58 4 10c0 5.25 8 12 8 12s8-6.75 8-12c0-4.42-3.58-8-8-8z"
+      />
+      <circle cx="12" cy="10" r="3.4" fill="white" />
+    </svg>
+    <span>GPS</span>
+  </>
+)}
               </button>
             </div>
             <p className="form-hint" style={{ marginTop: 4 }}>Used to match you with nearby donors or recipients.</p>
